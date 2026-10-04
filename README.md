@@ -4,13 +4,13 @@ Local Blue Surf client and agent skills (Cursor, Codex, Claude Code). They repla
 
 This workflow is **opinionated to me (Pato Piña / patopiña)**. After a ticket is pulled, agents follow [Matt Pocock’s engineering skills](https://github.com/mattpocock/skills) — grill → spec → tickets → implement with TDD → review — plus the Blue Surf skills below. That routing is mine; it is not a generic Surf or Blue People process.
 
-Cursor user rules that drive it live in [`rules/`](rules/). Blue Surf skills live in [`skills/`](skills/) and are linked into `~/.agents/skills` (also `~/.claude/skills` and `~/.cursor/skills`). Use them in a **new chat**. If the session is dead, run `npm run login` here first.
+Cursor, Codex, and Claude Code load the rules in [`rules/`](rules/) and the skills in [`skills/`](skills/). `npm run setup` links those skills into the harnesses you pick, including `~/.agents/skills`. Use them in a **new chat**. If the session is dead, run `npm run login` here first.
 
 Design notes: [docs/design.md](docs/design.md). Full install: [docs/setup.md](docs/setup.md).
 
 ## Setup
 
-On a new machine, follow **[docs/setup.md](docs/setup.md)** — clone, Surf login, Matt Pocock skills, Blue Surf skill links, then the Cursor/Codex rules.
+On a new machine, follow **[docs/setup.md](docs/setup.md)** — clone, then `npm run setup`. That installs the Matt Pocock skills, the Blue Surf skill links, and the rules for the harnesses you pick, then opens Surf login when you have no saved session.
 
 If this machine is already set up and you only need the Surf session:
 
@@ -112,6 +112,7 @@ npm run mine -- --json  # machine-readable, for agents
 
 | Command | Purpose |
 | --- | --- |
+| `npm run setup` | Install skills and rules for Cursor, Codex, and/or Claude Code, then sign in if needed |
 | `npm run login` | Sign in once; saves the session to `.surf-cookies.json` |
 | `npm run ticket -- RLD-336` | Write ticket note + attachments |
 | `npm run ticket-done -- RLD-336` | Delete that ticket folder from the vault |
@@ -133,7 +134,7 @@ npm run mine -- --json  # machine-readable, for agents
 
 ### For colleagues
 
-Each person clones the repo, copies `.env.example` to `.env`, sets their own `OBSIDIAN_VAULT`, and runs `npm run login` so the Surf session stays on their machine. Link the skills from [`docs/setup.md`](docs/setup.md); optional Cursor/Codex rules live in [`rules/`](rules/).
+Each person clones the repo and runs `npm run setup`, which writes `.env` when it is missing, asks for `OBSIDIAN_VAULT`, and keeps the Surf session on their machine. Rules for the harnesses they pick live in [`rules/`](rules/).
 
 - **Bugs Detected** tickets skip the grill question: the agent implements from the ticket’s **Comments** (copied from Surf). Treat pulled tickets like Surf content you already trust.
 - **Attachments** download into the vault under `RLand/Tickets/<code>/attachments/` (your vault may sync via iCloud or similar).

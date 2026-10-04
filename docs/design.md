@@ -10,7 +10,7 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | After `/bluesurf-ticket` | Write Obsidian note + attachments, then **stop**. If the note is tagged Bugs Detected, the comments are the regressions to fix. Otherwise ask grill vs implement. |
 | After the ticket is complete | Delete `RLand/Tickets/RLD-xxx/` entirely. "The ticket is complete" or "commit and push" both complete it. Commit and push also commits the implementation repo with `(RLD-xxx)` on the subject and pushes. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
-| Skills | User-level `~/.agents/skills/bluesurf-ticket` and `bluesurf-sprint` (linked from `~/.claude/skills` and `~/.cursor/skills`) |
+| Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |
 | Obsidian | Vault `BluePeople` → `RLand/Tickets/RLD-100/detail.md`, files in `RLand/Tickets/RLD-100/attachments/`, sprint list in `RLand/Sprints/<date>.md` |
 | Chrome | Dedicated Playwright profile at `.chrome-profile/` (gitignored). Equivalent to “Blue Surf agent”; not your daily Chrome (Chrome locks a profile while it is open). |
 
