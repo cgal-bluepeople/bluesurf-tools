@@ -317,6 +317,7 @@ Never push until asked, including tags.
   it("runs npm install, installs Matt Pocock skills, and logs in when the session file is missing", async () => {
     const calls = [];
     const result = await setup(options(["--all"], {
+      nodeVersion: "v22.20.0",
       run: async (command, args, opts) => {
         calls.push({ command, args, cwd: opts.cwd });
         return { code: 0 };
@@ -332,6 +333,19 @@ Never push until asked, including tags.
       { command: "npm", args: ["run", "login"], cwd: repoRoot },
     ]);
     assert.equal(result.loggedIn, true);
+  });
+
+  it("installs Matt Pocock skills with skills@1.5.18 when Node is below 22.20", async () => {
+    const calls = [];
+    const result = await setup(options(["--claude"], {
+      nodeVersion: "v20.19.4",
+      run: async (command, args) => {
+        calls.push([command, args[1], args[3]]);
+        return { code: 0 };
+      },
+    }));
+    assert.deepEqual(calls[1], ["npx", "skills@1.5.18", "mattpocock/skills"]);
+    assert.ok(result.warnings.some((warning) => warning.includes("skills@1.5.18")));
   });
 
   it("skips login when .surf-cookies.json already exists", async () => {
@@ -354,13 +368,14 @@ Never push until asked, including tags.
     const calls = [];
     await assert.rejects(
       () => setup(options(["--all"], {
+        nodeVersion: "v20.19.4",
         run: async (command, args) => {
           calls.push([command, args[0]]);
           if (command === "npx") return { code: 1, stderr: "nope" };
           return { code: 0 };
         },
       })),
-      /skills@latest/,
+      /skills@1\.5\.18/,
     );
     assert.deepEqual(calls, [
       ["npm", "install"],

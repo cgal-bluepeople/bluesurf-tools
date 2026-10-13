@@ -1,5 +1,6 @@
 import { access, lstat, mkdir, readdir, readFile, symlink, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { skillsCliPackage } from "./skills-cli.js";
 
 const ORDER = ["cursor", "codex", "claude"];
 
@@ -40,13 +41,19 @@ all) All three
 
 Enter numbers separated by spaces (for example: 1 3), or all.`;
 
-export async function setup({ args = [], repoRoot, home, env = {}, stdinIsTTY = false, prompt, run }) {
+export async function setup({ args = [], repoRoot, home, env = {}, stdinIsTTY = false, prompt, run, nodeVersion = process.version }) {
   const harnesses = args.length === 0
     ? await harnessesFromPrompt({ stdinIsTTY, prompt })
     : harnessesFromArgs(args);
   const warnings = await ensureEnv({ repoRoot, env, stdinIsTTY, prompt });
   await runStep(run, "npm", ["install"], repoRoot);
-  await runStep(run, "npx", mattPocockArgs(harnesses), repoRoot);
+  const skillsCli = skillsCliPackage(nodeVersion);
+  if (skillsCli !== "skills@latest") {
+    warnings.push(
+      `Node ${nodeVersion} is below 22.20.0; Matt Pocock skills install uses ${skillsCli}. Upgrade Node to use skills@latest.`,
+    );
+  }
+  await runStep(run, "npx", mattPocockArgs(harnesses, skillsCli), repoRoot);
   const skills = await listBlueSurfSkills(repoRoot);
   const placements = [];
   for (const name of skills) {
@@ -64,10 +71,10 @@ export async function setup({ args = [], repoRoot, home, env = {}, stdinIsTTY = 
   return { harnesses, warnings, loggedIn };
 }
 
-function mattPocockArgs(harnesses) {
+function mattPocockArgs(harnesses, skillsCli) {
   return [
     "--yes",
-    "skills@latest",
+    skillsCli,
     "add",
     "mattpocock/skills",
     "-g",

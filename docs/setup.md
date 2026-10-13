@@ -4,6 +4,8 @@ This is **Pato Piña / patopiña’s** agent setup, not a generic Surf or Blue P
 
 On a new machine, clone this repo and run setup. Open a **new chat** when it finishes so the harness reloads skills and rules.
 
+**Node:** Node 18+ runs this repo. The Matt Pocock skills installer (`npx skills …`) needs Node **22.20+** for `skills@latest`. On Node 20 or 21, setup pins **`skills@1.5.18`** instead (same `add mattpocock/skills` flags). Upgrade Node when you can.
+
 ## 1. Clone and run setup
 
 ```bash
