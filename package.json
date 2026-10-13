@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Local Blue Surf client for agent skills. Uses your SSO session only.",
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "login": "node scripts/login.mjs",
     "spike": "node scripts/spike-capture.mjs",
     "ticket": "node scripts/ticket.mjs",
