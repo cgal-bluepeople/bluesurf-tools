@@ -5,15 +5,23 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { setup } from "../src/setup.js";
+import { spawnSpec } from "../src/spawn-command.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const names = { cursor: "Cursor", codex: "Codex", claude: "Claude Code" };
 
 function run(command, args, { cwd }) {
+  const spec = spawnSpec(command, args);
   return new Promise((resolve) => {
-    const child = spawn(command, args, { cwd, stdio: "inherit" });
-    child.on("error", (error) => resolve({ code: 1, stderr: error.message }));
-    child.on("close", (code) => resolve({ code: code ?? 1 }));
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    const child = spawn(spec.command, spec.args, { cwd, stdio: "inherit", ...spec.options });
+    child.on("error", (error) => finish({ code: 1, stderr: error.message }));
+    child.on("close", (code) => finish({ code: code ?? 1 }));
   });
 }
 
