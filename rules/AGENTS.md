@@ -31,6 +31,7 @@ Routing:
 - `/bluesurf-ticket`, pull a Surf ticket, or `RLD-xxx` into Obsidian → `bluesurf-ticket`
 - "ticket is complete" or "commit and push" on a pulled Surf ticket → `bluesurf-ticket` (complete branch)
 - `/bluesurf-sprint`, sprint note, or current sprint from Surf → `bluesurf-sprint`
+- `/bluesurf-sprint-review`, sprint review, review last sprint, or how did last sprint go → `bluesurf-sprint-review`
 - `/bluesurf-mine`, my tickets, or what's assigned to me in Surf → `bluesurf-mine`
 - New/fuzzy feature or idea in a repo → `grill-with-docs`
 - Idea with no working repo → `grill-me`

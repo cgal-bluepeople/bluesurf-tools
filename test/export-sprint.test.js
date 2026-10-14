@@ -43,11 +43,10 @@ describe("exportSprint", () => {
       client,
       vault,
       projectCode: "RLD",
-      date: "2026-09-09",
     });
-    assert.equal(result.notePath, path.join(root, "RLand/Sprints/2026-09-09.md"));
+    assert.equal(result.notePath, path.join(root, "RLand/Sprints/Sprint 14.md"));
     const note = await readFile(result.notePath, "utf8");
-    assert.match(note, /# Sprint 14 — 2026-09-09/);
+    assert.match(note, /^# Sprint 14$/m);
     assert.match(note, /## Pending Tickets/);
     assert.match(note, /\| Ticket \| Title \| Estimate \| Effort \| Type \| Status \| Priority \| Tags \|/);
     assert.match(note, /1\.5h/);
@@ -60,7 +59,7 @@ describe("exportSprint", () => {
   });
 
   it("rewrites the existing sprint file when the sprint was already captured", async () => {
-    await vault.writeSprint("2026-09-09", "# Sprint 14 — 2026-09-09\n");
+    await vault.writeSprint("Sprint 14", "# Sprint 14\nold\n");
     const client = {
       async listMyCurrentSprintRows() {
         return [
@@ -82,9 +81,8 @@ describe("exportSprint", () => {
       client,
       vault,
       projectCode: "RLD",
-      date: "2026-09-14",
     });
-    assert.equal(result.notePath, path.join(root, "RLand/Sprints/2026-09-09.md"));
-    assert.match(await readFile(result.notePath, "utf8"), /# Sprint 14 — 2026-09-14/);
+    assert.equal(result.notePath, path.join(root, "RLand/Sprints/Sprint 14.md"));
+    assert.match(await readFile(result.notePath, "utf8"), /^# Sprint 14$/m);
   });
 });

@@ -1,16 +1,11 @@
 import { toSprintNote } from "./model.js";
 
-export function todayStamp(now = new Date()) {
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-export async function exportSprint({ client, vault, projectCode, date }) {
+export async function exportSprint({ client, vault, projectCode }) {
   const rows = await client.listMyCurrentSprintRows(projectCode);
-  const notePath = await vault.writeSprint(date, toSprintNote(rows, { date, ticketsDir: vault.ticketsDir }), {
-    sprint: rows[0]?.sprint,
-  });
+  const sprintName = rows[0]?.sprint || "Current sprint";
+  const notePath = await vault.writeSprint(
+    sprintName,
+    toSprintNote(rows, { ticketsDir: vault.ticketsDir }),
+  );
   return { notePath, rows };
 }

@@ -6,6 +6,9 @@ import {
   modalCurrentSprintId,
   latestCurrentSprintId,
   listMyCurrentSprintWorkItems,
+  listMySprintWorkItems,
+  resolveSprintReviewNumber,
+  latestSprintNumber,
   sortByPriority,
   groupSprintRows,
   toAttachment,
@@ -143,6 +146,31 @@ describe("listMyCurrentSprintWorkItems", () => {
   });
 });
 
+describe("listMySprintWorkItems", () => {
+  it("keeps items whose current sprint name matches the target number", () => {
+    assert.deepEqual(
+      listMySprintWorkItems(kanban, 14).map((item) => item.code),
+      ["RLD-336", "RLD-337"],
+    );
+    assert.deepEqual(listMySprintWorkItems(kanban, 13).map((item) => item.code), ["RLD-340"]);
+  });
+});
+
+describe("resolveSprintReviewNumber", () => {
+  it("defaults to one below the highest sprint number on assigned cards", () => {
+    const items = [
+      { currentSprintName: "Sprint 15" },
+      { currentSprintName: "Sprint 14" },
+    ];
+    assert.equal(latestSprintNumber(items), 15);
+    assert.equal(resolveSprintReviewNumber(items), 14);
+  });
+
+  it("uses an explicit override when provided", () => {
+    assert.equal(resolveSprintReviewNumber([{ currentSprintName: "Sprint 15" }], 11), 11);
+  });
+});
+
 describe("sortByPriority", () => {
   it("orders Highest before Lowest without mutating the input", () => {
     const items = flattenKanbanWorkItems(kanban);
@@ -201,9 +229,9 @@ describe("toSprintNote", () => {
       toSprintRow(flattenKanbanWorkItems(kanban)[3]),
     ];
     assert.equal(
-      toSprintNote(rows, { date: "2026-09-09" }),
+      toSprintNote(rows),
       [
-        "# Sprint 14 — 2026-09-09",
+        "# Sprint 14",
         "",
         "## Pending Tickets",
         "",
@@ -226,7 +254,7 @@ describe("toSprintNote ticketsDir", () => {
   it("links tickets under the configured tickets folder", () => {
     const rows = [toSprintRow(flattenKanbanWorkItems(kanban)[1])];
     assert.match(
-      toSprintNote(rows, { date: "2026-09-09", ticketsDir: "Work/Surf" }),
+      toSprintNote(rows, { ticketsDir: "Work/Surf" }),
       /\[\[Work\/Surf\/RLD-336\/detail\\\|RLD-336\]\]/,
     );
   });

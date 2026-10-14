@@ -11,7 +11,7 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | After the ticket is complete | Delete `RLand/Tickets/RLD-xxx/` entirely. "The ticket is complete" or "commit and push" both complete it. Commit and push also commits the implementation repo with `(RLD-xxx)` on the subject and pushes. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
 | Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |
-| Obsidian | Vault `BluePeople` → `RLand/Tickets/RLD-100/detail.md`, files in `RLand/Tickets/RLD-100/attachments/`, sprint list in `RLand/Sprints/<date>.md` |
+| Obsidian | Vault `BluePeople` → `RLand/Tickets/RLD-100/detail.md`, files in `RLand/Tickets/RLD-100/attachments/`, sprint notes in `RLand/Sprints/Sprint N.md` |
 | Chrome | Dedicated Playwright profile at `.chrome-profile/` (gitignored). Equivalent to “Blue Surf agent”; not your daily Chrome (Chrome locks a profile while it is open). |
 
 ## Layers
@@ -34,7 +34,7 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 
 1. Fetch tickets assigned to you on the current sprint.
 2. Sort by priority.
-3. Write `RLand/Sprints/<YYYY-MM-DD>.md` with title, estimated hours, type, tags, and ticket links.
+3. Write `RLand/Sprints/Sprint N.md` with title, estimated hours, type, tags, and ticket links.
 
 ## Spike result (2026-09-10)
 
@@ -94,7 +94,7 @@ Each work item: `code`, `name`, `priority` / `priorityName`, `estimatedEffort`, 
 
 1. **Sprint list endpoint** — board filter still sends `sprints: []`. SPA source also has `POST /api/projectSprint` (save) and `POST /api/workItems/byProperty/sprint` (assign). No dedicated list GET in the captures. Keep inferring the current sprint from `currentSprintId` on kanban cards.
 2. **Attachments** — mapped from RLD-339 + SPA `downloadFile` / `getFileNames`. `npm run ticket -- RLD-xxx` writes `detail.md` and downloads `GET /api/workItem/{id}/file/{fileId}`.
-3. **Sprint note** — `npm run sprint` writes `RLand/Sprints/<YYYY-MM-DD>.md` from `listMyCurrentSprintRows`, or rewrites the existing file if that sprint heading is already in the folder. Two tables: **Pending Tickets** (`Development (IN PROGRESS)`, `Analysis (IN PROGRESS)`, `Analysis (DONE)`, any `BLOCKED`) and **Done Tickets** (the rest). Estimate is `estimatedEffort`. Effort is **reported** hours (`totalExecuted` from `GET /api/workItem/{code}`; kanban `totalHours` is estimate×1.25 and is not used). Ordered by priority. Still no sprint-list GET; current sprint is the highest-numbered `currentSprintName` on your assigned cards. The most common `currentSprintId` was tried first and picked a past sprint: old sprints keep their cards, so a big old sprint outvotes a smaller current one.
+3. **Sprint note** — `npm run sprint` writes `RLand/Sprints/Sprint N.md` from `listMyCurrentSprintRows`, or rewrites the same file on later runs. `npm run sprint-review` does the same for Sprint N−1 (or an explicit sprint number): assigned tickets whose `currentSprintName` matches that sprint. Two tables: **Pending Tickets** (`Development (IN PROGRESS)`, `Analysis (IN PROGRESS)`, `Analysis (DONE)`, any `BLOCKED`) and **Done Tickets** (the rest). Estimate is `estimatedEffort`. Effort is **reported** hours (`totalExecuted` from `GET /api/workItem/{code}`; kanban `totalHours` is estimate×1.25 and is not used). Ordered by priority. Still no sprint-list GET; current sprint is the highest-numbered `currentSprintName` on your assigned cards. The most common `currentSprintId` was tried first and picked a past sprint: old sprints keep their cards, so a big old sprint outvotes a smaller current one.
 
 ## Proposed client functions
 

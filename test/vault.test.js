@@ -48,21 +48,16 @@ describe("createVault", () => {
     await assert.rejects(() => access(removed), { code: "ENOENT" });
   });
 
-  it("writes a sprint note under RLand/Sprints by date", async () => {
-    const notePath = await vault.writeSprint("2026-09-09", "# Sprint 14 — 2026-09-09\n");
-    assert.equal(notePath, path.join(root, "RLand/Sprints/2026-09-09.md"));
-    assert.equal(await readFile(notePath, "utf8"), "# Sprint 14 — 2026-09-09\n");
+  it("writes a sprint note under RLand/Sprints by sprint name", async () => {
+    const notePath = await vault.writeSprint("Sprint 14", "# Sprint 14\n");
+    assert.equal(notePath, path.join(root, "RLand/Sprints/Sprint 14.md"));
+    assert.equal(await readFile(notePath, "utf8"), "# Sprint 14\n");
   });
 
   it("rewrites the existing sprint note when that sprint was already captured", async () => {
-    await vault.writeSprint("2026-09-09", "# Sprint 14 — 2026-09-09\n");
-    const notePath = await vault.writeSprint("2026-09-14", "# Sprint 14 — 2026-09-14\nupdated\n", {
-      sprint: "Sprint 14",
-    });
-    assert.equal(notePath, path.join(root, "RLand/Sprints/2026-09-09.md"));
-    assert.equal(await readFile(notePath, "utf8"), "# Sprint 14 — 2026-09-14\nupdated\n");
-    await assert.rejects(() => access(path.join(root, "RLand/Sprints/2026-09-14.md")), {
-      code: "ENOENT",
-    });
+    await vault.writeSprint("Sprint 14", "# Sprint 14\n");
+    const notePath = await vault.writeSprint("Sprint 14", "# Sprint 14\nupdated\n");
+    assert.equal(notePath, path.join(root, "RLand/Sprints/Sprint 14.md"));
+    assert.equal(await readFile(notePath, "utf8"), "# Sprint 14\nupdated\n");
   });
 });

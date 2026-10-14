@@ -1,5 +1,6 @@
 export { createClient } from "./client.js";
-export { exportSprint, todayStamp } from "./export-sprint.js";
+export { exportSprint } from "./export-sprint.js";
+export { exportSprintReview, defaultReviewSprintNumber } from "./export-sprint-review.js";
 export { exportTicket } from "./export-ticket.js";
 export { createSessionClient, createSessionRequest, profileDir } from "./session.js";
 export { createVault, safeFileName } from "./vault.js";
@@ -11,6 +12,9 @@ export {
   isDoneStatus,
   latestCurrentSprintId,
   listMyCurrentSprintWorkItems,
+  listMySprintWorkItems,
+  latestSprintNumber,
+  resolveSprintReviewNumber,
   modalCurrentSprintId,
   parseTicketKey,
   groupSprintRows,

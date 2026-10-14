@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { loadEnvFile } from "../src/env.js";
 import { createSessionClient } from "../src/session.js";
 import { createVault } from "../src/vault.js";
-import { exportSprint, todayStamp } from "../src/export-sprint.js";
+import { exportSprint } from "../src/export-sprint.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 await loadEnvFile(path.join(root, ".env"));
@@ -15,7 +15,6 @@ if (!vaultRoot) {
 }
 
 const projectCode = process.argv[2] ?? process.env.BLUESURF_PROJECT ?? "RLD";
-const date = process.argv[3] ?? todayStamp();
 const headless = process.env.BLUESURF_HEADED !== "1";
 const client = await createSessionClient({
   origin: process.env.BLUESURF_ORIGIN,
@@ -31,7 +30,6 @@ try {
       sprintsDir: process.env.OBSIDIAN_SPRINTS_DIR ?? "RLand/Sprints",
     }),
     projectCode,
-    date,
   });
   console.log(`Wrote ${result.notePath}`);
   if (result.rows.length === 0) {

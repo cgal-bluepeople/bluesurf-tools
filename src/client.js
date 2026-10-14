@@ -2,6 +2,7 @@ import {
   findBoardStatus,
   flattenKanbanWorkItems,
   listMyCurrentSprintWorkItems,
+  listMySprintWorkItems,
   parseTicketKey,
   sortByPriority,
   toAttachment,
@@ -107,6 +108,15 @@ export function createClient({ request, origin = "https://surf.bluepeople.com" }
     },
     async listMyCurrentSprintRows(projectCode) {
       const items = sortByPriority(await this.listMyCurrentSprintWorkItems(projectCode));
+      return this.toSprintRows(items);
+    },
+    async listMySprintRows(projectCode, targetSprintNumber) {
+      const user = await this.getCurrentUser();
+      const kanban = await this.getKanban(projectCode, { assignedTo: [user.id] });
+      const items = sortByPriority(listMySprintWorkItems(kanban, targetSprintNumber));
+      return this.toSprintRows(items);
+    },
+    toSprintRows(items) {
       return Promise.all(
         items.map(async (item) => {
           const full = await this.getWorkItem(item.code);

@@ -10,6 +10,7 @@
     "ticket": "node scripts/ticket.mjs",
     "ticket-done": "node scripts/ticket-done.mjs",
     "sprint": "node scripts/sprint.mjs",
+    "sprint-review": "node scripts/sprint-review.mjs",
     "move": "node scripts/move.mjs",
     "mine": "node scripts/mine.mjs",
     "test": "node --test test/*.test.js",

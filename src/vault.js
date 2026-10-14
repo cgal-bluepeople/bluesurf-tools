@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseTicketKey } from "./model.js";
 
@@ -50,33 +50,26 @@ export function createVault({
       await writeFile(dest, bytes);
       return dest;
     },
-    sprintPath(date) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        throw new Error(`Invalid sprint date: ${date}`);
+    sprintNotePath(sprintName) {
+      const name = String(sprintName ?? "").trim();
+      if (!name) {
+        throw new Error("Invalid sprint name");
       }
-      return path.join(root, sprintsDir, `${date}.md`);
+      return path.join(root, sprintsDir, `${name}.md`);
     },
     async findSprintPath(sprintName) {
       if (!sprintName) return null;
-      const dir = path.join(root, sprintsDir);
-      let names;
+      const canonical = this.sprintNotePath(sprintName);
       try {
-        names = await readdir(dir);
+        await access(canonical);
+        return canonical;
       } catch (error) {
-        if (error.code === "ENOENT") return null;
-        throw error;
-      }
-      const prefix = `# ${sprintName} —`;
-      for (const name of names) {
-        if (!name.endsWith(".md")) continue;
-        const dest = path.join(dir, name);
-        const firstLine = (await readFile(dest, "utf8")).split("\n")[0] ?? "";
-        if (firstLine.startsWith(prefix)) return dest;
+        if (error.code !== "ENOENT") throw error;
       }
       return null;
     },
-    async writeSprint(date, markdown, { sprint } = {}) {
-      const dest = (await this.findSprintPath(sprint)) ?? this.sprintPath(date);
+    async writeSprint(sprintName, markdown) {
+      const dest = (await this.findSprintPath(sprintName)) ?? this.sprintNotePath(sprintName);
       await mkdir(path.dirname(dest), { recursive: true });
       await writeFile(dest, markdown);
       return dest;

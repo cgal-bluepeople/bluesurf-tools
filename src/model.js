@@ -39,9 +39,34 @@ export function modalCurrentSprintId(items) {
   return winner;
 }
 
-function sprintNumber(name) {
+export function sprintNumber(name) {
   const match = /(\d+)/.exec(String(name ?? ""));
   return match ? Number(match[1]) : null;
+}
+
+export function latestSprintNumber(items) {
+  let max = -Infinity;
+  for (const item of items) {
+    const number = sprintNumber(item.currentSprintName);
+    if (number === null) continue;
+    if (number > max) max = number;
+  }
+  return max === -Infinity ? null : max;
+}
+
+export function listMySprintWorkItems(kanban, targetSprintNumber) {
+  const items = flattenKanbanWorkItems(kanban);
+  if (targetSprintNumber === null || targetSprintNumber === undefined) return [];
+  return items.filter((item) => sprintNumber(item.currentSprintName) === targetSprintNumber);
+}
+
+export function resolveSprintReviewNumber(items, override) {
+  if (override !== undefined && override !== null && !Number.isNaN(override)) {
+    return Number(override);
+  }
+  const current = latestSprintNumber(items);
+  if (current === null) return null;
+  return current - 1;
 }
 
 // Surf has no "current sprint" endpoint. Old sprints keep their cards, so the
@@ -138,11 +163,12 @@ function sprintTable(rows, ticketsDir) {
   return lines;
 }
 
-export function toSprintNote(rows, { date, ticketsDir = "RLand/Tickets" } = {}) {
+export function toSprintNote(rows, { ticketsDir = "RLand/Tickets", review = false } = {}) {
   const sprint = rows[0]?.sprint || "Current sprint";
   const { pending, done } = groupSprintRows(rows);
+  const heading = review ? `# ${sprint} Review` : `# ${sprint}`;
   return [
-    `# ${sprint} — ${date}`,
+    heading,
     "",
     "## Pending Tickets",
     "",

@@ -63,9 +63,9 @@ Snapshot your assigned tickets on the current Surf sprint into Obsidian.
 1. Opens Chromium briefly to reuse the saved session.
 2. Loads tickets assigned to you on the latest sprint (highest-numbered `currentSprintName` on your cards; falls back to the most common `currentSprintId` if names have no number).
 3. For each ticket, reads reported hours from the work item (`totalExecuted`), not the board’s inflated `totalHours`.
-4. Writes or **rewrites** the note for that sprint (same file if Sprint 14 was already captured).
+4. Writes or **rewrites** the note for that sprint (`RLand/Sprints/Sprint N.md`).
 
-**Vault file:** `RLand/Sprints/<YYYY-MM-DD>.md` (first capture), then the same path is updated on later runs.
+**Vault file:** `RLand/Sprints/Sprint N.md` (e.g. `Sprint 14.md`); later runs update the same file.
 
 **Tables:**
 
@@ -78,8 +78,23 @@ Does not pull a single ticket unless you ask.
 
 ```bash
 npm run sprint
-npm run sprint -- RLD 2026-09-16
+npm run sprint -- RLD
 ```
+
+## `/bluesurf-sprint-review`
+
+Snapshot your assigned tickets on the **previous** Surf sprint (or a sprint number you name) into Obsidian.
+
+**Say:** `/bluesurf-sprint-review`, “sprint review”, “review last sprint”, or “how did last sprint go” (export, then summarize from the note).
+
+**Does:** same tables as the current-sprint snapshot, but for Sprint N−1 by default (highest sprint on your cards minus one). Only tickets whose **current** Surf sprint name still matches that sprint.
+
+```bash
+npm run sprint-review              # previous sprint
+npm run sprint-review -- RLD 13    # explicit sprint number
+```
+
+If you have no assigned tickets on that sprint, nothing is written to the vault.
 
 ## `/bluesurf-move`
 
@@ -117,6 +132,7 @@ npm run mine -- --json  # machine-readable, for agents
 | `npm run ticket -- RLD-336` | Write ticket note + attachments |
 | `npm run ticket-done -- RLD-336` | Delete that ticket folder from the vault |
 | `npm run sprint` | Write or rewrite the current-sprint note |
+| `npm run sprint-review` | Write or rewrite a past-sprint review note (default: previous sprint) |
 | `npm run move -- RLD-388 "dev done"` | Preview a status move; add `--yes` to move |
 | `npm run mine` | List your open tickets across all sprints (`--all`, `--json`) |
 | `npm test` | Unit tests |
