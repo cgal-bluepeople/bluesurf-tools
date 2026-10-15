@@ -4,7 +4,7 @@ import { lstat, mkdir, mkdtemp, readFile, readlink, rm, symlink, writeFile } fro
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { setup } from "../src/setup.js";
+import { linkBlueSurfSkills, setup } from "../src/setup.js";
 
 const RULES = {
   "no-push-until-i-say-so.md": `---
@@ -117,6 +117,18 @@ describe("setup", () => {
     assert.equal(await readlink(path.join(home, ".agents", "skills", "bluesurf-ticket")), ticket);
     await assert.rejects(lstat(path.join(home, ".codex", "skills", "bluesurf-ticket")));
     await assert.rejects(lstat(path.join(home, ".cursor", "skills", "other-skill")));
+  });
+
+  it("linkBlueSurfSkills links every bluesurf-* directory including new skills", async () => {
+    const review = path.join(repoRoot, "skills", "bluesurf-sprint-review");
+    await mkdir(review, { recursive: true });
+    await writeFile(path.join(review, "SKILL.md"), "# review\n");
+
+    const linked = await linkBlueSurfSkills({ repoRoot, home, harnesses: ["codex", "claude"] });
+    assert.deepEqual(linked, ["bluesurf-mine", "bluesurf-sprint-review", "bluesurf-ticket"]);
+    assert.equal(await readlink(path.join(home, ".codex", "skills", "bluesurf-sprint-review")), review);
+    assert.equal(await readlink(path.join(home, ".claude", "skills", "bluesurf-sprint-review")), review);
+    assert.equal(await readlink(path.join(home, ".agents", "skills", "bluesurf-sprint-review")), review);
   });
 
   it("asks which harnesses when no flags are given", async () => {

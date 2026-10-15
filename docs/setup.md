@@ -26,7 +26,7 @@ Setup does this, in order:
 1. If `.env` is missing, copies `.env.example` and asks for `OBSIDIAN_VAULT`. Set that variable in the environment to skip the question. An existing `.env` is left as it is. The other keys stay at the example defaults (`https://surf.bluepeople.com`, project `RLD`, `RLand/Tickets`, `RLand/Sprints`).
 2. Runs `npm install`.
 3. Installs the Matt Pocock skills for the harnesses you picked (`npx skills add mattpocock/skills`, global, the whole pack). Skip the Claude Code plugin `mattpocock-skills`; installing both shows every skill twice.
-4. Symlinks the Blue Surf skills from this repo into each selected harness, and into `~/.agents/skills` (the router reads that path). A later `git pull` updates the skills.
+4. Symlinks the Blue Surf skills from this repo into each selected harness, and into `~/.agents/skills` (the router reads that path). A later `git pull` updates the skills. After pulling a **new** Blue Surf skill, run `npm run link-skills` (all harnesses by default) or re-run setup for the harnesses you use — no login or Matt Pocock reinstall needed.
 5. Writes rules:
    - **Cursor:** `~/.cursor/rules/*.mdc` (always apply). If you already pasted these into Settings → User Rules, delete those three so they do not apply twice: No push until I say so, Ask questions via the harness, Matt Pocock skill router.
    - **Codex:** a managed section in `~/.codex/AGENTS.md`.
@@ -62,6 +62,7 @@ cd ~/Projects/bluesurf-tools && npm test
 test -f ~/.agents/skills/grill-with-docs/SKILL.md && echo "mattpocock ok"
 test -f ~/.agents/skills/bluesurf-ticket/SKILL.md && echo "ticket skill ok"
 test -f ~/.agents/skills/bluesurf-sprint/SKILL.md && echo "sprint skill ok"
+test -f ~/.agents/skills/bluesurf-sprint-review/SKILL.md && echo "sprint-review skill ok"
 test -f ~/.agents/skills/bluesurf-mine/SKILL.md && echo "mine skill ok"
 ```
 

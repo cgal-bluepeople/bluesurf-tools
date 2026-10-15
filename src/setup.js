@@ -54,18 +54,7 @@ export async function setup({ args = [], repoRoot, home, env = {}, stdinIsTTY = 
     );
   }
   await runStep(run, "npx", mattPocockArgs(harnesses, skillsCli), repoRoot);
-  const skills = await listBlueSurfSkills(repoRoot);
-  const placements = [];
-  for (const name of skills) {
-    const target = path.join(repoRoot, "skills", name);
-    const dests = [
-      path.join(home, ".agents", "skills", name),
-      ...harnesses.map((harness) => path.join(home, ...SKILL_DIRS[harness], name)),
-    ];
-    for (const dest of dests) placements.push({ dest, target });
-  }
-  for (const { dest } of placements) await assertSkillLinkable(dest);
-  for (const { dest, target } of placements) await linkSkill(dest, target);
+  const skills = await linkBlueSurfSkills({ repoRoot, home, harnesses });
   await installRules({ repoRoot, home, harnesses, warnings });
   const loggedIn = await loginIfNeeded({ repoRoot, run });
   return { harnesses, warnings, loggedIn };
@@ -185,13 +174,32 @@ async function ensureEnv({ repoRoot, env, stdinIsTTY, prompt }) {
   return warnings;
 }
 
-async function listBlueSurfSkills(repoRoot) {
+export async function listBlueSurfSkills(repoRoot) {
   const entries = await readdir(path.join(repoRoot, "skills"), { withFileTypes: true });
   return entries
     .filter((entry) => entry.isDirectory() && entry.name.startsWith("bluesurf-"))
     .map((entry) => entry.name)
     .sort();
 }
+
+/** Symlink every bluesurf-* skill from this repo into ~/.agents/skills and selected harnesses. */
+export async function linkBlueSurfSkills({ repoRoot, home, harnesses }) {
+  const skills = await listBlueSurfSkills(repoRoot);
+  const placements = [];
+  for (const name of skills) {
+    const target = path.join(repoRoot, "skills", name);
+    const dests = [
+      path.join(home, ".agents", "skills", name),
+      ...harnesses.map((harness) => path.join(home, ...SKILL_DIRS[harness], name)),
+    ];
+    for (const dest of dests) placements.push({ dest, target });
+  }
+  for (const { dest } of placements) await assertSkillLinkable(dest);
+  for (const { dest, target } of placements) await linkSkill(dest, target);
+  return skills;
+}
+
+export { harnessesFromArgs, ORDER as HARNESS_ORDER, SKILL_DIRS };
 
 async function installRules({ repoRoot, home, harnesses, warnings }) {
   const rules = [];
