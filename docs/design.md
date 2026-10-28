@@ -8,7 +8,8 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | --- | --- |
 | Data access | Persistent Chrome profile + replay the SPA’s private JSON APIs. DOM scrape is fallback only. |
 | After `/bluesurf-ticket` | Write Obsidian note + attachments, then **stop**. If the note is tagged Bugs Detected, the comments are the regressions to fix. Otherwise ask grill vs implement. |
-| After the ticket is complete | Delete `RLand/Tickets/RLD-xxx/` entirely. "The ticket is complete" or "commit and push" both complete it. Commit and push also commits the implementation repo with `(RLD-xxx)` on the subject and pushes. |
+| Ticket implement flow | grill (plan includes **Functional checks**) → implement + tdd → code-review → **functional-test** (hard gate; `RLand/Tickets/PRY-XXX/validation/`) → commit impl repo with `(PRY-XXX)` → complete. |
+| After the ticket is complete | Delete `RLand/Tickets/PRY-XXX/` entirely (including `validation/`). "The ticket is complete" or "commit and push" both complete it; complete only after functional-test passed. Commit and push also pushes the implementation repo. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
 | Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |
 | Obsidian | Vault `BluePeople` → `RLand/Tickets/RLD-100/detail.md`, files in `RLand/Tickets/RLD-100/attachments/`, sprint notes in `RLand/Sprints/Sprint N.md` |
@@ -93,7 +94,7 @@ Each work item: `code`, `name`, `priority` / `priorityName`, `estimatedEffort`, 
 ### Gaps
 
 1. **Sprint list endpoint** — board filter still sends `sprints: []`. SPA source also has `POST /api/projectSprint` (save) and `POST /api/workItems/byProperty/sprint` (assign). No dedicated list GET in the captures. Keep inferring the current sprint from `currentSprintId` on kanban cards.
-2. **Attachments** — mapped from RLD-339 + SPA `downloadFile` / `getFileNames`. `npm run ticket -- RLD-xxx` writes `detail.md` and downloads `GET /api/workItem/{id}/file/{fileId}`.
+2. **Attachments** — mapped from RLD-339 + SPA `downloadFile` / `getFileNames`. `npm run ticket -- PRY-XXX` writes `detail.md` and downloads `GET /api/workItem/{id}/file/{fileId}`.
 3. **Sprint note** — `npm run sprint` writes `RLand/Sprints/Sprint N.md` from `listMyCurrentSprintRows`, or rewrites the same file on later runs. `npm run sprint-review` does the same for Sprint N−1 (or an explicit sprint number): assigned tickets whose `currentSprintName` matches that sprint. Two tables: **Pending Tickets** (`Development (IN PROGRESS)`, `Analysis (IN PROGRESS)`, `Analysis (DONE)`, any `BLOCKED`) and **Done Tickets** (the rest). Estimate is `estimatedEffort`. Effort is **reported** hours (`totalExecuted` from `GET /api/workItem/{code}`; kanban `totalHours` is estimate×1.25 and is not used). Ordered by priority. Still no sprint-list GET; current sprint is the highest-numbered `currentSprintName` on your assigned cards. The most common `currentSprintId` was tried first and picked a past sprint: old sprints keep their cards, so a big old sprint outvotes a smaller current one.
 
 ## Proposed client functions
@@ -102,7 +103,7 @@ Do not install skills yet. Implement these in `src/` next:
 
 - `createSession()` — launch persistent Chromium; throw “run `npm run login`” on 401.
 - `getCurrentUser()` — id + display name for filters.
-- `parseTicketKey("RLD-336")` → `{ projectCode: "RLD", code: "RLD-336" }`.
+- `parseTicketKey("PRY-123")` → `{ projectCode: "PRY", code: "PRY-123" }`.
 - `getWorkItem(code)` — full ticket for Obsidian.
 - `getWorkItemVideos(code)` — video list (often empty).
 - `listWorkItemFiles(code)` — `files[]` plus filename lookups.

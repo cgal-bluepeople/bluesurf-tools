@@ -2,7 +2,7 @@
 
 Local Blue Surf client and agent skills (Cursor, Codex, Claude Code). They replay **your** SSO session in a dedicated Chromium profile. There is no public API and no password handling.
 
-This workflow is **opinionated to me (Pato Piña / patopiña)**. After a ticket is pulled, agents follow [Matt Pocock’s engineering skills](https://github.com/mattpocock/skills) — grill → spec → tickets → implement with TDD → review — plus the Blue Surf skills below. That routing is mine; it is not a generic Surf or Blue People process.
+This workflow is **opinionated to me (Pato Piña / patopiña)**. After a ticket is pulled, agents follow [Matt Pocock’s engineering skills](https://github.com/mattpocock/skills) — grill → spec → tickets → implement with TDD → review → functional-test — plus the Blue Surf skills below. That routing is mine; it is not a generic Surf or Blue People process.
 
 Cursor, Codex, and Claude Code load the rules in [`rules/`](rules/) and the skills in [`skills/`](skills/). `npm run setup` links those skills into the harnesses you pick, including `~/.agents/skills`. Use them in a **new chat**. If the session is dead, run `npm run login` here first.
 
@@ -29,27 +29,29 @@ When the session expires, the skills run `npm run login` for you: a window opens
 
 Pull one Surf work item into Obsidian, then stop. A ticket tagged Bugs Detected carries regression comments to fix. Any other ticket waits until you choose grill or implement.
 
-**Say:** `/bluesurf-ticket RLD-336`, or “pull RLD-336”.
+**Say:** `/bluesurf-ticket PRY-XXX`, or “pull PRY-XXX”.
 
 **Does:**
 
 1. Reuses the saved session in headless Chromium.
-2. Writes `RLand/Tickets/RLD-336/detail.md` (title, priority, type, status, sprint, estimate, tags, attachment names, HTML description). A `Bugs Detected` tag also writes the comments.
-3. Downloads files into `RLand/Tickets/RLD-336/attachments/`.
+2. Writes `RLand/Tickets/PRY-XXX/detail.md` (title, priority, type, status, sprint, estimate, tags, attachment names, HTML description). A `Bugs Detected` tag also writes the comments.
+3. Downloads files into `RLand/Tickets/PRY-XXX/attachments/`.
 4. Stops. On `Bugs Detected`, the comments are the regressions to fix. Otherwise asks **grill vs implement**.
 
-**Complete the ticket** when the work is finished:
+**Implement flow** (implementation repo; keep dev running and document URL/auth in that repo’s **AGENTS.md**): grill (plan includes **Functional checks**) → implement + TDD → code-review → **functional-test** (Playwright subagent or smoke matrix; report under `RLand/Tickets/PRY-XXX/validation/`) → commit with `(PRY-XXX)` on the subject.
+
+**Complete the ticket** only after functional-test passes:
 
 | You say | What happens |
 | --- | --- |
-| “The ticket is complete” | Deletes `RLand/Tickets/RLD-336/` from the vault. |
-| “Commit and push” | Commits the **implementation repo** with `(RLD-336)` at the end of the subject, pushes that branch, then deletes the vault folder. That phrase is push permission for this ticket. |
+| “The ticket is complete” | Deletes `RLand/Tickets/PRY-XXX/` from the vault (including `validation/`). |
+| “Commit and push” | Commits if needed, pushes the **implementation repo**, then deletes the vault folder. That phrase is push permission for this ticket. |
 
 Same as the CLIs:
 
 ```bash
-npm run ticket -- RLD-336
-npm run ticket-done -- RLD-336
+npm run ticket -- PRY-XXX
+npm run ticket-done -- PRY-XXX
 ```
 
 ## `/bluesurf-sprint`
@@ -72,7 +74,7 @@ Snapshot your assigned tickets on the current Surf sprint into Obsidian.
 - **Pending Tickets** — `Development (IN PROGRESS)`, `Analysis (IN PROGRESS)`, `Analysis (DONE)`, and any `BLOCKED` status
 - **Done Tickets** — everything else
 
-Each table is ordered by priority. Columns: ticket (wiki link to `<OBSIDIAN_TICKETS_DIR>/RLD-xxx/detail`), title, estimate, effort (hours already reported), type, status, priority, tags.
+Each table is ordered by priority. Columns: ticket (wiki link to `<OBSIDIAN_TICKETS_DIR>/PRY-XXX/detail`), title, estimate, effort (hours already reported), type, status, priority, tags.
 
 Does not pull a single ticket unless you ask.
 
@@ -129,8 +131,8 @@ npm run mine -- --json  # machine-readable, for agents
 | --- | --- |
 | `npm run setup` | Install skills and rules for Cursor, Codex, and/or Claude Code, then sign in if needed |
 | `npm run login` | Sign in once; saves the session to `.surf-cookies.json` |
-| `npm run ticket -- RLD-336` | Write ticket note + attachments |
-| `npm run ticket-done -- RLD-336` | Delete that ticket folder from the vault |
+| `npm run ticket -- PRY-XXX` | Write ticket note + attachments |
+| `npm run ticket-done -- PRY-XXX` | Delete that ticket folder from the vault |
 | `npm run sprint` | Write or rewrite the current-sprint note |
 | `npm run sprint-review` | Write or rewrite a past-sprint review note (default: previous sprint) |
 | `npm run move -- RLD-388 "dev done"` | Preview a status move; add `--yes` to move |

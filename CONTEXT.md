@@ -13,7 +13,7 @@ The skills that talk to Surf and Obsidian: ticket, sprint, sprint-review, move, 
 _Avoid_: Surf commands, the CLI
 
 **Matt Pocock skills**:
-The external engineering skills the router sends work to, such as grill, spec, implement, and review.
+The external engineering skills the router sends work to, such as grill, spec, implement, review, and functional-test (the last lives in this repo and links with setup).
 _Avoid_: the workflow, the skill pack
 
 **Managed section**:

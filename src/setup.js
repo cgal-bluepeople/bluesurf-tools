@@ -174,10 +174,16 @@ async function ensureEnv({ repoRoot, env, stdinIsTTY, prompt }) {
   return warnings;
 }
 
+const REPO_SKILL_NAMES = new Set(["functional-test"]);
+
 export async function listBlueSurfSkills(repoRoot) {
   const entries = await readdir(path.join(repoRoot, "skills"), { withFileTypes: true });
   return entries
-    .filter((entry) => entry.isDirectory() && entry.name.startsWith("bluesurf-"))
+    .filter(
+      (entry) =>
+        entry.isDirectory()
+        && (entry.name.startsWith("bluesurf-") || REPO_SKILL_NAMES.has(entry.name)),
+    )
     .map((entry) => entry.name)
     .sort();
 }

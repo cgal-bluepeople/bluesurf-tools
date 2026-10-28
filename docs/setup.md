@@ -1,6 +1,6 @@
 # Setup
 
-This is **Pato Piña / patopiña’s** agent setup, not a generic Surf or Blue People process. After a ticket is pulled, agents follow [Matt Pocock’s engineering skills](https://github.com/mattpocock/skills) (grill → spec → tickets → implement with TDD → review) plus the Blue Surf skills in this repo.
+This is **Pato Piña / patopiña’s** agent setup, not a generic Surf or Blue People process. After a ticket is pulled, agents follow [Matt Pocock’s engineering skills](https://github.com/mattpocock/skills) (grill → spec → tickets → implement with TDD → review → **functional-test**) plus the Blue Surf skills in this repo.
 
 On a new machine, clone this repo and run setup. Open a **new chat** when it finishes so the harness reloads skills and rules.
 
@@ -41,7 +41,9 @@ Do **not** run `/setup-matt-pocock-skills` here. That skill is per implementatio
 
 - Hand off the **git repo** (clone), not a zip or copy of someone’s working tree. Local-only files — `.surf-cookies.json`, `.chrome-profile/`, `.env`, and `.scratch/` — are gitignored and must stay on each person’s machine.
 - Everyone uses their **own** SSO via setup or `npm run login`. Sessions are not shared.
-- Use the **skills** (`bluesurf-move`, `bluesurf-ticket`, …) in agent chats. They enforce preview/confirm for board moves; running `npm run move … --yes` directly skips that step.
+- Use the **skills** (`bluesurf-move`, `bluesurf-ticket`, `functional-test`, …) in agent chats. They enforce preview/confirm for board moves; running `npm run move … --yes` directly skips that step.
+- In each **implementation repo**, keep **AGENTS.md** up to date: dev base URL, health check, how to run tests/smoke, and Playwright `storageState` / test credentials when the app needs login.
+- Re-running `npx skills add mattpocock/skills` can overwrite local edits to **implement**; re-apply the no-auto-commit tail from this repo’s workflow if that happens.
 - Tickets tagged **Bugs Detected** tell the agent to implement from Surf **comments** without a grill step. Description and comments are written into Obsidian as-is (HTML included).
 - Pulling a ticket downloads **attachments** into your vault. Only pull work items you would open in Surf anyway.
 
@@ -61,9 +63,10 @@ cd ~/Projects/bluesurf-tools && npm test
 
 test -f ~/.agents/skills/grill-with-docs/SKILL.md && echo "mattpocock ok"
 test -f ~/.agents/skills/bluesurf-ticket/SKILL.md && echo "ticket skill ok"
+test -f ~/.agents/skills/functional-test/SKILL.md && echo "functional-test skill ok"
 test -f ~/.agents/skills/bluesurf-sprint/SKILL.md && echo "sprint skill ok"
 test -f ~/.agents/skills/bluesurf-sprint-review/SKILL.md && echo "sprint-review skill ok"
 test -f ~/.agents/skills/bluesurf-mine/SKILL.md && echo "mine skill ok"
 ```
 
-Then a **new** chat: `/bluesurf-sprint` or “pull RLD-336”. If a command says the session expired, run `npm run login` again.
+Then a **new** chat: `/bluesurf-sprint` or “pull PRY-XXX”. If a command says the session expired, run `npm run login` again.

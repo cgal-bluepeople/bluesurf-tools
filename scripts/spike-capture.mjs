@@ -108,7 +108,7 @@ Spike capture is recording API and file requests against ${origin}.
 
 In the browser:
   1. Confirm you are logged in.
-  2. Open a ticket that has file attachments. RLD-336 has none — pick another.
+  2. Open a ticket that has file attachments. Some tickets have none — pick another.
   3. Click or preview at least one attachment so the download request fires.
   4. Open the sprint dropdown / filter on the board.
 

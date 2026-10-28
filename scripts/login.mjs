@@ -43,7 +43,7 @@ while (!closed && Date.now() < deadline) {
     await saveCookieJar(context);
     await context.close();
     console.log(`Signed in. Session saved to ${cookieJarPath()}.`);
-    console.log("Next: npm run sprint, or npm run ticket -- RLD-xxx");
+    console.log("Next: npm run sprint, or npm run ticket -- PRY-XXX");
     process.exit(0);
   }
   await new Promise((resolve) => setTimeout(resolve, 1000));

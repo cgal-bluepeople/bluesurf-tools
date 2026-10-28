@@ -9,7 +9,7 @@ await loadEnvFile(path.join(root, ".env"));
 
 const code = process.argv[2];
 if (!code) {
-  console.error("Usage: npm run ticket-done -- RLD-339");
+  console.error("Usage: npm run ticket-done -- PRY-XXX");
   process.exit(1);
 }
 parseTicketKey(code);

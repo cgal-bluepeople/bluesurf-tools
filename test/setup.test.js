@@ -88,10 +88,12 @@ describe("setup", () => {
     home = path.join(root, "home");
     await mkdir(path.join(repoRoot, "skills", "bluesurf-ticket"), { recursive: true });
     await mkdir(path.join(repoRoot, "skills", "bluesurf-mine"), { recursive: true });
+    await mkdir(path.join(repoRoot, "skills", "functional-test"), { recursive: true });
     await mkdir(path.join(repoRoot, "skills", "other-skill"), { recursive: true });
     await mkdir(path.join(repoRoot, "rules"), { recursive: true });
     await writeFile(path.join(repoRoot, "skills", "bluesurf-ticket", "SKILL.md"), "# ticket\n");
     await writeFile(path.join(repoRoot, "skills", "bluesurf-mine", "SKILL.md"), "# mine\n");
+    await writeFile(path.join(repoRoot, "skills", "functional-test", "SKILL.md"), "# functional\n");
     await writeFile(path.join(repoRoot, "rules", "AGENTS.md"), LEGACY_AGENTS);
     for (const [name, body] of Object.entries(RULES)) {
       await writeFile(path.join(repoRoot, "rules", name), body);
@@ -125,7 +127,12 @@ describe("setup", () => {
     await writeFile(path.join(review, "SKILL.md"), "# review\n");
 
     const linked = await linkBlueSurfSkills({ repoRoot, home, harnesses: ["codex", "claude"] });
-    assert.deepEqual(linked, ["bluesurf-mine", "bluesurf-sprint-review", "bluesurf-ticket"]);
+    assert.deepEqual(linked, [
+      "bluesurf-mine",
+      "bluesurf-sprint-review",
+      "bluesurf-ticket",
+      "functional-test",
+    ]);
     assert.equal(await readlink(path.join(home, ".codex", "skills", "bluesurf-sprint-review")), review);
     assert.equal(await readlink(path.join(home, ".claude", "skills", "bluesurf-sprint-review")), review);
     assert.equal(await readlink(path.join(home, ".agents", "skills", "bluesurf-sprint-review")), review);

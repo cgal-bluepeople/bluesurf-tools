@@ -6,7 +6,7 @@ Classify every coding request and follow the matching skill without waiting for 
 
 Routing:
 
-- /bluesurf-ticket, pull a Surf ticket, or RLD-xxx into Obsidian → bluesurf-ticket
+- /bluesurf-ticket, pull a Surf ticket, or PRY-XXX into Obsidian → bluesurf-ticket
 - "ticket is complete" or "commit and push" on a pulled Surf ticket → bluesurf-ticket (complete branch)
 - /bluesurf-sprint, sprint note, or current sprint from Surf → bluesurf-sprint
 - /bluesurf-sprint-review, sprint review, review last sprint, or how did last sprint go → bluesurf-sprint-review
@@ -18,13 +18,14 @@ Routing:
 - Something broken, flaky, throwing, or slow → diagnosing-bugs
 - "just do this", "don't grill", or a one-file obvious fix → implement and use tdd
 - Review this branch/PR/diff → code-review
+- Functional or acceptance testing after implementation, or Surf ticket post-review → functional-test
 - In-progress merge/rebase conflict → resolving-merge-conflicts
 - Human-only setup (secrets, CI, dashboards) → wizard
 - "that didn't land" / wait-what → wait-what
 - Need facts from primary sources → research
 - Need a throwaway answer to a design question → prototype (handoff out and back if it needs its own directory)
 
-Main flow after grilling: if a question needs a runnable answer, prototype (with handoff). If multi-session, to-spec then to-tickets, then implement each ticket in a fresh chat. If single-session, implement here. implement drives tdd, then code-review, then commit only if I asked. Never push unless I explicitly asked to push.
+Main flow after grilling: if a question needs a runnable answer, prototype (with handoff). If multi-session, to-spec then to-tickets, then implement each ticket in a fresh chat. If single-session, implement here. implement drives tdd, then code-review. On a pulled Surf ticket, bluesurf-ticket chains functional-test (hard gate); functional-test commits after pass. Other work: commit only if I asked. Never push unless I explicitly asked to push.
 
 Keep grill → spec → tickets in one chat. Start a fresh chat per implement ticket.
 
