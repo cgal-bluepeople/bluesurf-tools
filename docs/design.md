@@ -8,7 +8,7 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | --- | --- |
 | Data access | Persistent Chrome profile + replay the SPA’s private JSON APIs. DOM scrape is fallback only. |
 | After `/bluesurf-ticket` | Write Obsidian note + attachments, then **stop**. If the note is tagged Bugs Detected, the comments are the regressions to fix. Otherwise ask grill vs implement. |
-| Ticket implement flow | grill (plan includes **Functional checks**) → implement + tdd → code-review → **functional-test** (hard gate; `RLand/Tickets/PRY-XXX/validation/`) → commit impl repo with `(PRY-XXX)` → complete. |
+| Ticket implement flow | grill (plan includes **Functional checks**) → Matt **implement** (tdd, code-review, commit with `(PRY-XXX)`) → **functional-test** (hard gate; `RLand/Tickets/PRY-XXX/validation/`) → complete / push. Orchestration in **bluesurf-ticket**; do not edit Matt Pocock skills. |
 | After the ticket is complete | Delete `RLand/Tickets/PRY-XXX/` entirely (including `validation/`). "The ticket is complete" or "commit and push" both complete it; complete only after functional-test passed. Commit and push also pushes the implementation repo. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
 | Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |

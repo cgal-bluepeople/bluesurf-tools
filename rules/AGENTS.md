@@ -47,7 +47,9 @@ Routing:
 - Need facts from primary sources → `research`
 - Need a throwaway answer to a design question → `prototype` (handoff out and back if it needs its own directory)
 
-Main flow after grilling: if a question needs a runnable answer, `prototype` (with `handoff`). If multi-session, `to-spec` then `to-tickets`, then `implement` each ticket in a fresh chat. If single-session, `implement` here. `implement` drives `tdd`, then `code-review`. On a pulled Surf ticket, `bluesurf-ticket` chains `functional-test` (hard gate); `functional-test` commits after pass. Other work: commit only if I asked. Never push unless I explicitly asked to push.
+Main flow after grilling: if a question needs a runnable answer, `prototype` (with `handoff`). If multi-session, `to-spec` then `to-tickets`, then `implement` each ticket in a fresh chat. If single-session, `implement` here. `implement` drives `tdd`, then `code-review`, then commit only if I asked. Never push unless I explicitly asked to push.
+
+Matt Pocock skills are immutable — do not edit them. On a pulled Surf ticket, `bluesurf-ticket` orchestrates after `implement`: `functional-test` (hard gate) before complete.
 
 Keep grill → spec → tickets in one chat. Start a fresh chat per `implement` ticket.
 

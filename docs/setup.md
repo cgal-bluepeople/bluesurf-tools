@@ -43,7 +43,7 @@ Do **not** run `/setup-matt-pocock-skills` here. That skill is per implementatio
 - Everyone uses their **own** SSO via setup or `npm run login`. Sessions are not shared.
 - Use the **skills** (`bluesurf-move`, `bluesurf-ticket`, `functional-test`, …) in agent chats. They enforce preview/confirm for board moves; running `npm run move … --yes` directly skips that step.
 - In each **implementation repo**, keep **AGENTS.md** up to date: dev base URL, health check, how to run tests/smoke, and Playwright `storageState` / test credentials when the app needs login.
-- Re-running `npx skills add mattpocock/skills` can overwrite local edits to **implement**; re-apply the no-auto-commit tail from this repo’s workflow if that happens.
+- Do **not** edit Matt Pocock skills locally. Surf-only steps (e.g. **functional-test** after **implement**) live in **bluesurf-ticket** and **functional-test** in this repo.
 - Tickets tagged **Bugs Detected** tell the agent to implement from Surf **comments** without a grill step. Description and comments are written into Obsidian as-is (HTML included).
 - Pulling a ticket downloads **attachments** into your vault. Only pull work items you would open in Surf anyway.
 

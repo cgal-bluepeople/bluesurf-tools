@@ -1,18 +1,20 @@
 ---
 name: functional-test
-description: Run functional acceptance checks after implementation — Playwright subagent for UI, smoke matrix for CLI/API — and write results under the Surf ticket validation folder. Use when a Surf ticket implementation passed code-review, when the user asks for functional or acceptance testing, or when bluesurf-ticket / the router chains this step after code-review.
+description: Run functional acceptance checks after implementation — Playwright subagent for UI, smoke matrix for CLI/API — and write results under the Surf ticket validation folder. Use when bluesurf-ticket requires post-implement verification, when the user asks for functional or acceptance testing on a Surf ticket, or after implement and code-review on pulled ticket work.
 ---
 
-Functional layer after **tdd** and **code-review**. Hard gate for Surf tickets: do not run **bluesurf-ticket** complete (or treat the ticket as done) until this skill passes.
+Blue Surf acceptance layer after Matt Pocock **implement** (which already ran **tdd**, **code-review**, and **commit**). Hard gate for **bluesurf-ticket** complete.
+
+Do not edit Matt Pocock skills; this skill only adds Surf verification.
 
 ## Prerequisites
 
 Settled before you start:
 
-1. **Spec** — pulled ticket `detail.md` plus the confirmed plan from the chat, including a **Functional checks** section (required before implement on ticket work).
-2. **Code review** — **code-review** finished with no blocking/high findings on Standards or Spec (nits may remain).
+1. **Spec** — pulled ticket `detail.md` plus the confirmed plan from the chat, including a **Functional checks** section.
+2. **Implement done** — **implement** finished for this ticket (including its commit). **code-review** had no blocking/high findings (nits may remain).
 3. **Dev server** — the human already runs the app. Read the implementation repo **AGENTS.md** (or **CONTEXT.md**) for base URL, health endpoint, and auth. Fail fast if health check fails; tell the human to start dev per AGENTS.md.
-4. **Ticket key** — e.g. `PRY-XXX` (project code + number) for vault paths and commit subject.
+4. **Ticket key** — e.g. `PRY-XXX` (project code + number) for vault paths.
 
 ## Process
 
@@ -63,25 +65,18 @@ Write:
 
 Give the human a **brief summary in chat**. Done when `validation/report.md` exists and reflects the latest run.
 
-### 5. Pass → commit (Surf ticket)
-
-When all required checks pass for ticket `{code}`:
-
-Commit the implementation repo with `{code}` in parentheses at the end of the subject (`… (PRY-XXX)`), same convention as **bluesurf-ticket** complete. Do not push unless the human explicitly asked to push.
-
-Done when the commit exists on the current branch.
-
 ## Failure loop
 
 On fail:
 
 1. Summarize failures (chat + update `validation/report.md`).
-2. Call **implement** with **tdd** to fix, then **code-review** again (must reach no blockers).
+2. Call **implement** with **tdd** to fix, then **code-review** again (must reach no blockers). **implement** commits when it finishes.
 3. Re-run this skill from step 1.
 
-Stop after **3** full implement → review → functional cycles. Then stop and ask the human how to proceed.
+Stop after **3** full implement → functional cycles. Then stop and ask the human how to proceed.
 
 ## Out of scope
 
 - Replacing unit/integration tests (**tdd** still owns those).
+- Git commit ( **implement** owns commit unless follow-up fixes need a new commit before push).
 - Pushing or running **ticket-done** (human says ticket complete / commit and push for that).
