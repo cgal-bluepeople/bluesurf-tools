@@ -29,14 +29,28 @@ function parseCheckLine(source) {
   return { op: "manual", source };
 }
 
+const API_PROBES = new Set(["auth", "core", "collab", "mock-oidc", "mcp"]);
+
 export function resolveAppUrl({ env = {}, stack } = {}) {
   if (env.RLAND_APP_URL) return withSlash(env.RLAND_APP_URL);
-  const checks = stack?.checks ?? [];
-  const proxy = checks.find((check) => check.id === "proxy" && check.up);
-  if (proxy?.url) return withSlash(proxy.url);
-  const web = checks.find((check) => check.id === "rland-web" && check.up);
-  if (web?.url) return withSlash(web.url.replace(/\/health\/?$/, "/"));
-  return null;
+  const pages = discoverAppUrls(stack);
+  return pages[0]?.url ?? null;
+}
+
+/** Pages that are up. API health checks are not places to open in the browser. */
+export function discoverAppUrls(stack) {
+  const pages = [];
+  for (const check of stack?.checks ?? []) {
+    if (!check.up || !check.url || API_PROBES.has(check.id)) continue;
+    const url = pageUrl(check);
+    if (url) pages.push({ id: check.id, url });
+  }
+  return pages;
+}
+
+function pageUrl(check) {
+  if (check.id === "loader-web") return "http://127.0.0.1:3001/loader/";
+  return withSlash(String(check.url).replace(/\/health\/?$/, "/"));
 }
 
 function withSlash(url) {
@@ -44,30 +58,44 @@ function withSlash(url) {
   return trimmed.endsWith("/") ? trimmed : `${trimmed}/`;
 }
 
-export function planPlaywright({ baseUrl = null, ticket = null, markdown = "" } = {}) {
+export function planPlaywright({
+  baseUrl = null,
+  candidates = [],
+  repos = [],
+  urlSource = "ask",
+  repoSource = "ask",
+  ticket = null,
+  markdown = "",
+} = {}) {
   if (ticket) parseTicketKey(ticket);
   const fromNote = parseFunctionalChecks(markdown);
   const steps = ticket ? fromNote : [{ op: "open", path: "/", source: "open /" }];
   const executable = steps.filter((step) => step.op !== "manual");
-  if (!baseUrl) {
+  const needsChoice = !baseUrl;
+  const needsRepos = !ticket && repos.length === 0;
+  const needsSave = urlSource === "flag" || repoSource === "flag";
+  const base = { baseUrl, ticket, steps, candidates, repos, needsChoice, needsRepos, needsSave, urlSource, repoSource };
+  if (needsChoice) {
+    const reason = candidates.length > 0
+      ? "app URL is not saved. Ask which running system to open, then --save --app-url."
+      : "no running UI to open. Start the app or set RLAND_APP_URL.";
+    return { ...base, canRun: false, reason };
+  }
+  if (needsRepos) {
     return {
+      ...base,
       canRun: false,
-      reason: "app URL is down. Playwright opens the running app. Set RLAND_APP_URL or bring the UI up.",
-      baseUrl: null,
-      ticket,
-      steps,
+      reason: "playwright repos are not saved. Ask which systems to validate, then --save with those repo names.",
     };
   }
   if (ticket && executable.length === 0) {
     return {
+      ...base,
       canRun: false,
       reason: "no executable functional checks. Write open, see, or url lines under ## Functional checks, or in validation/checks.md.",
-      baseUrl,
-      ticket,
-      steps,
     };
   }
-  return { canRun: true, reason: null, baseUrl, ticket, steps };
+  return { ...base, canRun: true, reason: null };
 }
 
 export async function runPlaywrightSteps({ baseUrl, steps, page }) {

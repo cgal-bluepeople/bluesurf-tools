@@ -148,7 +148,7 @@ npm run verify -- --yes --playwright           # browser check, report in .scrat
 npm run verify -- --yes --playwright --ticket PRY-12
 ```
 
-Ticket lines in `validation/checks.md` are `open /path`, `see "text"`, and `url /path`. The report is `RLand/Tickets/PRY-12/validation/report.md`. `RLAND_APP_URL` overrides the base address. `pnpm test:e2e` stays the mocked UI suite and is not this browser test. The RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`) is separate.
+The first Playwright run asks which running system to open and which repos that check covers, then `--save` writes `RLAND_APP_URL` and `RLAND_PLAYWRIGHT_REPOS`. Later runs use those values. Ticket lines in `validation/checks.md` are `open /path`, `see "text"`, and `url /path`. The report is `RLand/Tickets/PRY-12/validation/report.md`. `pnpm test:e2e` stays the mocked UI suite and is not this browser test. The RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`) is separate.
 
 ```bash
 npm run verify                         # preview dirty repos

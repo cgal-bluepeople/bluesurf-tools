@@ -4,6 +4,7 @@ export { exportSprintReview, defaultReviewSprintNumber } from "./export-sprint-r
 export { exportTicket } from "./export-ticket.js";
 export { createSessionClient, createSessionRequest, profileDir } from "./session.js";
 export {
+  discoverAppUrls,
   formatPlaywrightReport,
   parseFunctionalChecks,
   planPlaywright,

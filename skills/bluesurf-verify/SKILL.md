@@ -29,9 +29,11 @@ Do not pass `--yes` in the preview turn.
 
 When they want Playwright for a change, or a ticket validation:
 
-1. Preview with `npm run verify -- --json --playwright`. For a ticket, add `--ticket PRY-XXX`. The ticket's checks live in `validation/checks.md` (or `## Functional checks` in `detail.md`) as `open`, `see`, and `url` lines. **functional-test** writes that file.
-2. `npm run verify -- --yes --playwright` opens the running app and writes `.scratch/playwright/report.md`. `npm run verify -- --yes --playwright --ticket PRY-XXX` writes `RLand/Tickets/PRY-XXX/validation/report.md` and screenshots. Exit 0 means every browser check passed.
-3. A named repo suite is separate: `npm run verify -- --yes rland-core` runs `make test`. `--playwright` does not run `pnpm test:e2e`.
+1. Preview with `npm run verify -- --json --playwright`. For a ticket, add `--ticket PRY-XXX`.
+2. Read `playwright`. If `needsChoice` is true, ask with the harness question tool which running system to open. One question. Options are `playwright.candidates` (`id` and `url`). Recommended: `proxy` at `http://127.0.0.1/` when it is listed. If `needsRepos` is true, ask in the same form which systems to validate. Multi-select. Recommended: every check with `flow.canRun: true`. Do not pass `--yes` in this turn.
+3. After they answer, re-run `npm run verify -- --json --save --playwright --app-url <url> rland-ui` (one argument per system they picked). `--save` writes `RLAND_APP_URL` and `RLAND_PLAYWRIGHT_REPOS` into `.env`. Do not ask again while those are set. A ticket's checks live in `validation/checks.md` (or `## Functional checks` in `detail.md`) as `open`, `see`, and `url` lines. **functional-test** writes that file.
+4. `npm run verify -- --yes --playwright` opens the saved URL for the saved systems and writes `.scratch/playwright/report.md`. `npm run verify -- --yes --playwright --ticket PRY-XXX` writes `RLand/Tickets/PRY-XXX/validation/report.md` and screenshots. Exit 0 means every browser check passed. If `canRun` is false, say `reason` and do not launch the browser.
+5. A named repo suite is separate: `npm run verify -- --yes rland-core` runs `make test`. `--playwright` does not run `pnpm test:e2e`.
 
 When they pick repo suites and did not ask for the browser:
 

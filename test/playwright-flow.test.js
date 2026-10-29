@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
+  discoverAppUrls,
   formatPlaywrightReport,
   parseFunctionalChecks,
   planPlaywright,
@@ -29,17 +30,40 @@ describe("parseFunctionalChecks", () => {
 });
 
 describe("planPlaywright", () => {
-  it("opens the running app when testing a change", () => {
-    const plan = planPlaywright({ baseUrl: "http://127.0.0.1/" });
+  it("opens the running app when the url and repos are already chosen", () => {
+    const plan = planPlaywright({
+      baseUrl: "http://127.0.0.1/",
+      repos: ["rland-ui"],
+      urlSource: "config",
+      repoSource: "config",
+    });
     assert.equal(plan.canRun, true);
-    assert.equal(plan.ticket, null);
+    assert.equal(plan.needsChoice, false);
+    assert.equal(plan.needsRepos, false);
     assert.equal(plan.steps[0].path, "/");
+  });
+
+  it("asks where to open and which systems until those answers are saved", () => {
+    const pending = planPlaywright({
+      candidates: [{ id: "proxy", url: "http://127.0.0.1/" }, { id: "rland-web", url: "http://127.0.0.1:3000/" }],
+    });
+    assert.equal(pending.canRun, false);
+    assert.equal(pending.needsChoice, true);
+    assert.equal(pending.needsRepos, true);
+    const chosen = planPlaywright({
+      baseUrl: "http://127.0.0.1/",
+      repos: ["rland-ui"],
+      urlSource: "flag",
+      repoSource: "flag",
+    });
+    assert.equal(chosen.canRun, true);
+    assert.equal(chosen.needsSave, true);
   });
 
   it("refuses a ticket without executable checks or a live app", () => {
     const down = planPlaywright({ ticket: "PRY-12", markdown: note, baseUrl: null });
     assert.equal(down.canRun, false);
-    assert.match(down.reason, /app URL is down/);
+    assert.match(down.reason, /no running UI/);
     const prose = planPlaywright({
       ticket: "PRY-12",
       baseUrl: "http://127.0.0.1/",
@@ -50,12 +74,16 @@ describe("planPlaywright", () => {
   });
 
   it("uses the proxy when it is up, otherwise the web health URL", () => {
-    const stack = stackReport([
+    const webOnly = stackReport([
       { id: "proxy", up: false },
       { id: "rland-web", up: true },
+      { id: "auth", up: true },
     ]);
-    assert.equal(resolveAppUrl({ stack }), "http://127.0.0.1:3000/");
-    assert.equal(resolveAppUrl({ env: { RLAND_APP_URL: "http://app.test" }, stack }), "http://app.test/");
+    assert.equal(resolveAppUrl({ stack: webOnly }), "http://127.0.0.1:3000/");
+    assert.deepEqual(discoverAppUrls(webOnly).map((page) => page.id), ["rland-web"]);
+    const both = stackReport([{ id: "proxy", up: true }, { id: "rland-web", up: true }]);
+    assert.equal(resolveAppUrl({ stack: both }), "http://127.0.0.1/");
+    assert.equal(resolveAppUrl({ env: { RLAND_APP_URL: "http://app.test" }, stack: both }), "http://app.test/");
   });
 });
 

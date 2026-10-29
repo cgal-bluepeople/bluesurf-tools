@@ -107,19 +107,21 @@ export function parseVerifyArgs(argv) {
   let mode = null;
   let runner = null;
   let ticket = null;
+  let appUrl = null;
   const repos = [];
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--yes" || arg === "--json" || arg === "--save" || arg === "--playwright") continue;
-    if (arg === "--root" || arg === "--mode" || arg === "--runner" || arg === "--ticket") {
+    if (arg === "--root" || arg === "--mode" || arg === "--runner" || arg === "--ticket" || arg === "--app-url") {
       const value = argv[i + 1];
       if (!value || value.startsWith("--")) {
-        throw new Error("Usage: npm run verify -- [--json] [--yes] [--save] [--playwright] [--ticket PRY-XXX] [--mode stack|individual] [--runner repo] [--root path] [repo...]");
+        throw new Error("Usage: npm run verify -- [--json] [--yes] [--save] [--playwright] [--app-url url] [--ticket PRY-XXX] [--mode stack|individual] [--runner repo] [--root path] [repo...]");
       }
       if (arg === "--root") root = value;
       if (arg === "--mode") mode = value;
       if (arg === "--runner") runner = value;
       if (arg === "--ticket") ticket = value;
+      if (arg === "--app-url") appUrl = value;
       i += 1;
       continue;
     }
@@ -127,7 +129,18 @@ export function parseVerifyArgs(argv) {
     repos.push(arg);
   }
   if (ticket) parseTicketKey(ticket);
-  return { yes, json, save, playwright: playwright || Boolean(ticket), root, mode, runner, ticket, repos };
+  return {
+    yes,
+    json,
+    save,
+    playwright: playwright || Boolean(ticket) || Boolean(appUrl),
+    root,
+    mode,
+    runner,
+    ticket,
+    appUrl,
+    repos,
+  };
 }
 
 /** `repo|command|service,service` entries, separated by `;`. Blank services means none. */
@@ -582,7 +595,11 @@ export function formatVerifyPlan(plan) {
     lines.push(flow.canRun
       ? `${title}: can run ${flow.baseUrl}`
       : `${title}: cannot run. ${flow.reason}`);
-    for (const step of flow.steps) {
+    for (const candidate of flow.candidates ?? []) {
+      lines.push(`  ${candidate.id.padEnd(12)} ${candidate.url}`);
+    }
+    if ((flow.repos ?? []).length > 0) lines.push(`  repos        ${flow.repos.join(", ")}`);
+    for (const step of flow.steps ?? []) {
       lines.push(`  ${step.source}`);
     }
   }

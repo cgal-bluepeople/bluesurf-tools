@@ -52,7 +52,7 @@ This is the ticket test. Do not run `pnpm test:e2e`. That suite mocks the API.
    ```
 
    `open` loads a path on the running app. `see` requires that text. `url` requires the address to contain the fragment. Any other bullet fails the run.
-2. From bluesurf-tools: `npm run verify -- --json --playwright --ticket {code}`. Stdout is one JSON object. `playwright.canRun` must be true. If the app URL is down, say so and stop. Do not start Docker unless the human asks.
+2. From bluesurf-tools: `npm run verify -- --json --playwright --ticket {code}`. Stdout is one JSON object. If `playwright.needsChoice` or `playwright.needsRepos` is true, follow **bluesurf-verify**: ask where the running system is and which repos to cover, then `--save`. Do not pass `--yes` until `playwright.canRun` is true. If no UI is up, say `playwright.reason` and stop. Do not start Docker unless the human asks.
 3. Run `npm run verify -- --yes --playwright --ticket {code}`.
 4. Exit 0 and `validation/report.md` with `Result: pass` means the ticket checks passed. Screenshots are next to the report. On fail, read the report and go to **Failure loop**.
 

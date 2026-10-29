@@ -5,12 +5,14 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { loadEnvFile } from "../src/env.js";
 import {
+  discoverAppUrls,
   formatPlaywrightReport,
   planPlaywright,
   playwrightForJson,
   resolveAppUrl,
   runPlaywrightSteps,
 } from "../src/playwright-flow.js";
+import { parseRepoList } from "../src/sync.js";
 import { spawnSpec } from "../src/spawn-command.js";
 import {
   collectVerifyPlan,
@@ -50,11 +52,16 @@ try {
   process.exit(1);
 }
 
+const savedPlaywrightRepos = parseRepoList(env.RLAND_PLAYWRIGHT_REPOS);
+const repoNames = parsed.repos.length > 0
+  ? parsed.repos
+  : (parsed.playwright ? savedPlaywrightRepos : []);
+const repoSource = parsed.repos.length > 0 ? "flag" : (repoNames.length > 0 ? "config" : "ask");
 let plan;
 try {
   plan = await collectVerifyPlan({
     workspace,
-    repoNames: parsed.repos,
+    repoNames,
     env,
     mode: parsed.mode,
     runner: parsed.runner,
@@ -65,17 +72,23 @@ try {
 }
 const notes = [];
 if (parsed.save) {
-  if (!parsed.mode) {
-    console.error("Pass --mode stack or --mode individual with --save.");
+  const assignments = {};
+  if (parsed.mode) {
+    assignments.RLAND_RUN_MODE = parsed.mode;
+    assignments.RLAND_RUNNER = parsed.mode === "stack" ? (parsed.runner || plan.run.runner || "") : "";
+  }
+  if (parsed.appUrl) assignments.RLAND_APP_URL = resolveAppUrl({ env: { RLAND_APP_URL: parsed.appUrl } });
+  if (parsed.playwright && parsed.repos.length > 0) {
+    assignments.RLAND_PLAYWRIGHT_REPOS = parsed.repos.join(",");
+  }
+  if (Object.keys(assignments).length === 0) {
+    console.error("Pass --mode, --app-url, or playwright repo names with --save.");
     process.exit(1);
   }
   const envPath = path.join(root, ".env");
   const current = existsSync(envPath) ? await readFile(envPath, "utf8") : "";
-  await writeFile(envPath, upsertEnvAssignments(current, {
-    RLAND_RUN_MODE: parsed.mode,
-    RLAND_RUNNER: parsed.mode === "stack" ? (parsed.runner || plan.run.runner || "") : "",
-  }));
-  notes.push(`Saved RLAND_RUN_MODE=${parsed.mode} in ${envPath}`);
+  await writeFile(envPath, upsertEnvAssignments(current, assignments));
+  notes.push(`Saved ${Object.keys(assignments).join(", ")} in ${envPath}`);
 }
 
 if (parsed.playwright) {
@@ -89,8 +102,16 @@ if (parsed.playwright) {
     }
   }
   plan.playwrightDir = loaded?.dir ?? path.join(root, ".scratch", "playwright");
+  const urlSource = parsed.appUrl ? "flag" : (env.RLAND_APP_URL ? "config" : "ask");
   plan.playwright = planPlaywright({
-    baseUrl: resolveAppUrl({ env, stack: plan.stack }),
+    baseUrl: urlSource === "ask" ? null : resolveAppUrl({
+      env: parsed.appUrl ? { ...env, RLAND_APP_URL: parsed.appUrl } : env,
+      stack: plan.stack,
+    }),
+    candidates: discoverAppUrls(plan.stack),
+    repos: repoNames,
+    urlSource,
+    repoSource,
     ticket: parsed.ticket,
     markdown: loaded?.markdown ?? "",
   });

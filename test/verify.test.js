@@ -35,6 +35,7 @@ describe("parseVerifyArgs", () => {
       mode: null,
       runner: null,
       ticket: null,
+      appUrl: null,
       repos: ["rland-ui"],
     });
     assert.equal(parseVerifyArgs(["--playwright", "--ticket", "PRY-12"]).ticket, "PRY-12");
