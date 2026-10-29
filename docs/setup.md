@@ -67,6 +67,7 @@ test -f ~/.agents/skills/functional-test/SKILL.md && echo "functional-test skill
 test -f ~/.agents/skills/bluesurf-sprint/SKILL.md && echo "sprint skill ok"
 test -f ~/.agents/skills/bluesurf-sprint-review/SKILL.md && echo "sprint-review skill ok"
 test -f ~/.agents/skills/bluesurf-mine/SKILL.md && echo "mine skill ok"
+test -f ~/.agents/skills/bluesurf-verify/SKILL.md && echo "verify skill ok"
 ```
 
 Then a **new** chat: `/bluesurf-sprint` or “pull PRY-XXX”. If a command says the session expired, run `npm run login` again.

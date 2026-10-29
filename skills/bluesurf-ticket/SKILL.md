@@ -12,8 +12,9 @@ Repo: `~/Projects/bluesurf-tools`. Session is `.surf-cookies.json` there, loaded
 ## Pull
 
 1. Take the ticket key from the user (`PRY-XXX` — project code plus work item number).
-2. From the repo: `npm run ticket -- PRY-XXX`.
-3. Done when `RLand/Tickets/PRY-XXX/detail.md` exists.
+2. Name this conversation `(PRY-XXX) - short description` as soon as the key is known. Several tickets go in one parenthesis: `(PRY-XXX, PRY-YYY) - short description`. Do not invent a ticket. Update the parenthesis if another ticket joins the same chat.
+3. From the repo: `npm run ticket -- PRY-XXX`.
+4. Done when `RLand/Tickets/PRY-XXX/detail.md` exists.
 
 Then **stop**. Read the note's tags.
 

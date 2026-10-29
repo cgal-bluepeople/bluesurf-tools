@@ -1,7 +1,9 @@
 node_modules/
 .chrome-profile/
+.playwright/
 .scratch/
 .env
+*.zip
 *.har
 npm-debug.log
 .DS_Store

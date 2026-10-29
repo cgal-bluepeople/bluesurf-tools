@@ -10,6 +10,8 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | After `/bluesurf-ticket` | Write Obsidian note + attachments, then **stop**. If the note is tagged Bugs Detected, the comments are the regressions to fix. Otherwise ask grill vs implement. |
 | Ticket implement flow | grill (plan includes **Functional checks**) → Matt **implement** (tdd, code-review, commit with `(PRY-XXX)`) → **functional-test** (hard gate; `RLand/Tickets/PRY-XXX/validation/`) → complete / push. Orchestration in **bluesurf-ticket**; do not edit Matt Pocock skills. |
 | After the ticket is complete | Delete `RLand/Tickets/PRY-XXX/` entirely (including `validation/`). "The ticket is complete" or "commit and push" both complete it; complete only after functional-test passed. Commit and push also pushes the implementation repo. |
+| `/bluesurf-verify` | Search whether one repo runs the others or each repo runs itself. Ask when both exist and `RLAND_RUN_MODE` is unset. Then preview each repo's suite and flow. Run suites only with `--yes`. |
+| `/bluesurf-sync` | Before a new branch, update `RLAND_REPOS` from `RLAND_BASE` (`dev`). The saved list skips discovery. Fast-forward or merge. Abort a content conflict instead of picking a side. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
 | Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |
 | Obsidian | Vault `BluePeople` → `RLand/Tickets/RLD-100/detail.md`, files in `RLand/Tickets/RLD-100/attachments/`, sprint notes in `RLand/Sprints/Sprint N.md` |
@@ -118,6 +120,14 @@ Do not install skills yet. Implement these in `src/` next:
 - `createVault().removeTicket(code)` — delete `RLand/Tickets/{code}/` when the ticket is complete.
 
 Session helper: `apiGet(path)` / `apiPost(path, json)` on `https://surf.bluepeople.com` with the profile cookies. Never call `POST /api/login` from our code.
+
+## `/bluesurf-verify`
+
+1. Resolve the RLand workspace (`RLAND_ROOT`, else a sibling `rland-new`, `RLand`, or `rland`).
+2. Search run layout. A `docker-compose` file that references `../../<other-repo>` is a stack runner. `make local-up-detached` is the start command when that Makefile target exists. `package.json` `dev`, else Makefile `dev:`, else Makefile `run:` is an individual command. If both shapes exist and `RLAND_RUN_MODE` is unset, the plan sets `needsChoice` and does not run. `--mode stack|individual` and `--runner` choose for one invocation. `--save` writes `RLAND_RUN_MODE` and `RLAND_RUNNER` into `.env`.
+3. Probe `http://127.0.0.1/` (proxy), `:3000/health`, `:3001/loader/health`, `/api/auth/health`, `/api/core/health`, `/api/collab/health`, `:8091/health` (mock-oidc). The whole stack is ready when proxy, rland-web, auth, and core answered.
+4. For dirty repos (or names passed in): a suite (`rland-ui` → `pnpm test:e2e` when Node is 22+, pnpm is on PATH, and `playwright.config.ts` exists; Go repos → `make test` when `go` and a Makefile exist) and a flow. Stack mode: the flow is that repo's services on the runner (ui is proxy + rland-web, core is proxy + auth + core, auth adds mock-oidc, collab adds collab). Individual mode: the flow is that repo's own command. ngam has no host port in stack mode. commons and sql are not services.
+5. Print the plan. `--yes` runs suites that can, and refuses while the run mode is unchosen. The runner has no suite: `--yes` passes when its flow services are up. It does not start Docker.
 
 ## Out of scope
 
