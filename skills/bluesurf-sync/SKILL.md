@@ -3,13 +3,13 @@ name: bluesurf-sync
 description: Updates the configured repos from their base branch (dev) before a new feature branch is created. Use when the user wants to pull dev, update every repo, or is about to create a branch, in any wording: "/bluesurf-sync", "update dev", "baja los cambios de dev", "pull all repos", "crea una rama", or "new branch". A clean fast-forward or merge is applied. Content conflicts stop the new branch until they are resolved.
 ---
 
-Repo: `~/Projects/bluesurf-tools`. This does not use the Surf session. `RLAND_ROOT` is the workspace. `RLAND_REPOS` and `RLAND_BASE` (default `dev`) are the saved list. When they are set, do not scan the workspace for repos.
+Run from the bluesurf-tools checkout: the directory that contains `scripts/sync.mjs`. This file is `skills/bluesurf-sync/SKILL.md` in that repo. If the loaded file is a symlink, use its real path; do not assume `~/Projects/bluesurf-tools`. This does not use the Surf session. `RLAND_ROOT` is the workspace (a directory of repos; it does not need `rland-ui`). `RLAND_REPOS` and `RLAND_BASE` (default `dev`) are the saved list. When they are set, do not scan the workspace for repos.
 
 ## Before a new branch
 
 Run this before `git checkout -b` or `git switch -c` in any configured repo.
 
-1. From bluesurf-tools: `npm run sync -- --json`.
+1. From bluesurf-tools: `npm run sync -- --json`. Stdout is one JSON object. Parse that only. Notices go to stderr.
 2. If `target.needsSave` is true, the list was discovered from repos that have `origin/<base>`. Ask once, with the harness question tool, whether to save that list. Recommended: save it. Then `npm run sync -- --save --json`. Do not scan again after it is saved. Another workspace sets `RLAND_REPOS` and `RLAND_BASE` itself.
 3. Read each repo's `action`. `fast-forward`, `stash-integrate`, and `merge` need `--yes`. `conflict` and `diverged` do not update that repo.
 4. If they already asked to update, or a new branch is the next step: `npm run sync -- --yes`.

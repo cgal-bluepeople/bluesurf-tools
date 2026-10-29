@@ -4,7 +4,12 @@ import path from "node:path";
 import {
   buildVerifyPlan,
   discoverRunLayout,
+  emitCli,
   formatVerifyPlan,
+  inferCheck,
+  mergeChecks,
+  parseCheckList,
+  parseProbeList,
   parseVerifyArgs,
   resolveRunMode,
   resolveWorkspace,
@@ -32,8 +37,8 @@ describe("parseVerifyArgs", () => {
     });
   });
 
-  it("rejects an unknown repo and a missing --root value", () => {
-    assert.throws(() => parseVerifyArgs(["nope"]), /Unknown repo nope/);
+  it("accepts a repo name that is not in the built-in catalog", () => {
+    assert.deepEqual(parseVerifyArgs(["billing-api"]).repos, ["billing-api"]);
     assert.throws(() => parseVerifyArgs(["--root"]), /Usage:/);
     assert.throws(() => parseVerifyArgs(["--stack"]), /Unknown flag --stack/);
   });
@@ -65,6 +70,23 @@ describe("resolveWorkspace", () => {
       () => resolveWorkspace({ repoRoot: "/tools", env: { RLAND_ROOT: "/missing" }, exists: () => false }),
       /RLAND_ROOT does not exist/,
     );
+  });
+
+  it("accepts RLAND_ROOT without rland-ui, and a sibling marked .bluesurf-workspace", () => {
+    const other = "/work/other";
+    assert.equal(resolveWorkspace({
+      repoRoot: "/tools",
+      env: { RLAND_ROOT: other },
+      exists: (target) => target === other,
+    }), other);
+    const sibling = "/work/bluepeople/billing";
+    const found = resolveWorkspace({
+      repoRoot: "/work/bluepeople/bluesurf-tools",
+      env: {},
+      siblingNames: ["billing", "rland-new"],
+      exists: (target) => target === path.join(sibling, ".bluesurf-workspace"),
+    });
+    assert.equal(found, sibling);
   });
 });
 
@@ -332,5 +354,88 @@ describe("runVerifyPlan", () => {
     const outcome = await runVerifyPlan(plan, async () => 0);
     assert.equal(outcome.ok, false);
     assert.deepEqual(outcome.results, []);
+  });
+});
+
+describe("catalog", () => {
+  it("plans rland-mcp from vitest and the optional :8082 probe", () => {
+    const plan = buildVerifyPlan({
+      workspace,
+      repoNames: ["rland-mcp"],
+      existingRepos: ["rland-mcp"],
+      existingFiles: ["rland-mcp/package.json"],
+      tools: tools(),
+      stack: stackReport([{ id: "mcp", up: true }]),
+    });
+    const mcp = plan.checks[0];
+    assert.equal(mcp.command, "pnpm test");
+    assert.equal(mcp.canRun, true);
+    assert.equal(mcp.flow.canRun, true);
+    assert.deepEqual(mcp.flow.services, ["mcp"]);
+  });
+
+  it("overrides a built-in check and adds a repo from RLAND_CHECKS", () => {
+    const catalog = mergeChecks(
+      [{ repo: "rland-ui", kind: "playwright", command: "pnpm", args: ["test:e2e"], summary: "", flowServices: ["proxy"] }],
+      parseCheckList("rland-ui|pnpm test|;billing-api|npm test|api"),
+    );
+    assert.equal(catalog.find((check) => check.repo === "rland-ui").args.join(" "), "test");
+    const probes = parseProbeList("api|http://127.0.0.1:9090/health|required");
+    const stack = stackReport([{ id: "api", up: true }], probes);
+    assert.equal(stack.ready, true);
+    assert.equal(stack.checks.length, 1);
+    const plan = buildVerifyPlan({
+      workspace,
+      catalog,
+      repoNames: ["billing-api"],
+      existingRepos: ["billing-api"],
+      existingFiles: ["billing-api/package.json"],
+      tools: tools({ npm: true }),
+      stack,
+    });
+    assert.equal(plan.checks[0].command, "npm test");
+    assert.equal(plan.checks[0].canRun, true);
+    assert.equal(plan.checks[0].flow.canRun, true);
+  });
+
+  it("infers a suite from package.json and marks a name that is not on disk", () => {
+    const inferred = inferCheck({
+      repo: "billing-api",
+      packageJson: '{"packageManager":"npm@10.0.0","scripts":{"test":"node --test"}}\n',
+      makefile: "test:\n\tgo test\n",
+    });
+    assert.equal(inferred.kind, "node");
+    assert.equal(inferred.command, "npm");
+    const plan = buildVerifyPlan({
+      workspace,
+      repoNames: ["nope"],
+      existingRepos: [],
+      tools: tools(),
+      stack: stackReport([]),
+    });
+    assert.equal(plan.checks[0].canRun, false);
+    assert.match(plan.checks[0].reason, /unknown repo nope/);
+  });
+
+  it("rejects a malformed check or probe entry", () => {
+    assert.throws(() => parseCheckList("billing-api"), /RLAND_CHECKS/);
+    assert.throws(() => parseProbeList("api"), /RLAND_PROBES/);
+    assert.equal(parseProbeList("  "), null);
+  });
+
+  it("prints JSON only on stdout and notes on stderr", () => {
+    const out = [];
+    const err = [];
+    emitCli({
+      json: true,
+      payload: { run: { mode: "stack" } },
+      notes: ["Nothing ran. Re-run with --yes to run the checks that can."],
+    }, {
+      out: (line) => out.push(line),
+      err: (line) => err.push(line),
+    });
+    assert.deepEqual(JSON.parse(out.join("\n")), { run: { mode: "stack" } });
+    assert.equal(out.length, 1);
+    assert.match(err.join("\n"), /Nothing ran/);
   });
 });

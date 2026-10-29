@@ -1,10 +1,10 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { loadEnvFile } from "../src/env.js";
-import { upsertEnvAssignments } from "../src/verify.js";
+import { emitCli, upsertEnvAssignments } from "../src/verify.js";
 import { resolveWorkspace } from "../src/verify.js";
 import {
   applyRepoUpdate,
@@ -30,7 +30,12 @@ if (parsed.root) env.RLAND_ROOT = parsed.root;
 if (parsed.base) env.RLAND_BASE = parsed.base;
 let workspace;
 try {
-  workspace = resolveWorkspace({ repoRoot: root, env, exists: existsSync });
+  workspace = resolveWorkspace({
+    repoRoot: root,
+    env,
+    exists: existsSync,
+    siblingNames: siblingNames(root),
+  });
 } catch (error) {
   console.error(error.message);
   process.exit(1);
@@ -67,9 +72,7 @@ for (const repo of target.repos) {
 }
 
 const plan = { workspace, target, repos: inspected };
-if (parsed.json) console.log(JSON.stringify(plan, null, 2));
-else console.log(formatSyncPlan(plan));
-
+const notes = [];
 if (parsed.save) {
   const envPath = path.join(root, ".env");
   const current = existsSync(envPath) ? await readFile(envPath, "utf8") : "";
@@ -77,16 +80,26 @@ if (parsed.save) {
     RLAND_BASE: target.base,
     RLAND_REPOS: target.repos.join(","),
   }));
-  console.log(`Saved RLAND_BASE=${target.base} and RLAND_REPOS in ${envPath}`);
+  notes.push(`Saved RLAND_BASE=${target.base} and RLAND_REPOS in ${envPath}`);
 }
 
 if (!parsed.yes) {
-  console.log("");
-  console.log("Nothing changed. Re-run with --yes to update.");
+  emitCli({
+    json: parsed.json,
+    payload: plan,
+    text: formatSyncPlan(plan),
+    notes: [...notes, "Nothing changed. Re-run with --yes to update."],
+  });
   process.exit(0);
 }
 
+if (!parsed.json) {
+  console.log(formatSyncPlan(plan));
+  for (const note of notes) console.log(note);
+}
+
 let failed = false;
+const results = [];
 for (const item of inspected) {
   if (item.action === "skip" || item.action === "error") {
     if (item.action === "error") failed = true;
@@ -95,10 +108,22 @@ for (const item of inspected) {
   const cwd = path.join(workspace, item.repo);
   const dirty = item.dirty;
   const result = await applyRepoUpdate({ cwd, base: target.base, plan: item, dirty, git });
-  console.log(`${result.repo}: ${result.ok ? "ok" : "failed"} ${result.action}${result.applied ? "" : " (not applied)"} — ${result.reason}`);
+  results.push(result);
+  if (!parsed.json) {
+    console.log(`${result.repo}: ${result.ok ? "ok" : "failed"} ${result.action}${result.applied ? "" : " (not applied)"} — ${result.reason}`);
+  }
   if (!result.ok) failed = true;
 }
+if (parsed.json) emitCli({ json: true, payload: { ...plan, results }, notes });
 process.exit(failed ? 1 : 0);
+
+function siblingNames(repoRoot) {
+  try {
+    return readdirSync(path.dirname(repoRoot));
+  } catch {
+    return [];
+  }
+}
 
 async function discoverBaseRepos(workspace, base) {
   if (!workspace) return [];

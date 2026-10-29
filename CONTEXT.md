@@ -9,7 +9,7 @@ Cursor, Codex, or Claude Code. Each one loads skills and rules from its own conf
 _Avoid_: agent, IDE, tool
 
 **Blue Surf skills**:
-The skills in this repo: ticket, sprint, sprint-review, move, and mine talk to Surf and Obsidian. verify plans local RLand checks and does not talk to Surf.
+The skills in this repo: ticket, sprint, sprint-review, move, and mine talk to Surf and Obsidian. verify plans local checks and does not talk to Surf. sync updates the saved repos from their base branch and does not talk to Surf.
 _Avoid_: Surf commands, the CLI
 
 **Matt Pocock skills**:

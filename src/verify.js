@@ -17,6 +17,7 @@ export const STACK_PROBES = [
   { id: "core", url: "http://127.0.0.1/api/core/health", required: true },
   { id: "collab", url: "http://127.0.0.1/api/collab/health", required: false },
   { id: "mock-oidc", url: "http://127.0.0.1:8091/health", required: false },
+  { id: "mcp", url: "http://127.0.0.1:8082/health", required: false },
 ];
 
 export const REPO_CHECKS = [
@@ -69,6 +70,14 @@ export const REPO_CHECKS = [
     flowServices: null,
   },
   {
+    repo: "rland-mcp",
+    kind: "node",
+    command: "pnpm",
+    args: ["test"],
+    summary: "Vitest. The running flow is the MCP server on port 8082 (compose profile mcp).",
+    flowServices: ["mcp"],
+  },
+  {
     repo: "rland-infra",
     kind: "stack",
     command: null,
@@ -113,12 +122,88 @@ export function parseVerifyArgs(argv) {
     if (arg.startsWith("--")) throw new Error(`Unknown flag ${arg}`);
     repos.push(arg);
   }
-  for (const repo of repos) {
-    if (!KNOWN.has(repo)) {
-      throw new Error(`Unknown repo ${repo}. Options: ${[...KNOWN].join(", ")}`);
+  return { yes, json, save, root, mode, runner, repos };
+}
+
+/** `repo|command|service,service` entries, separated by `;`. Blank services means none. */
+export function parseCheckList(text) {
+  if (!text || !text.trim()) return [];
+  return text.split(";").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
+    const parts = entry.split("|").map((part) => part.trim());
+    const [repo, command, services = ""] = parts;
+    if (!repo || !command || parts.length > 3) {
+      throw new Error(`Bad RLAND_CHECKS entry "${entry}". Use repo|command|service,service`);
+    }
+    const [bin, ...args] = command.split(/\s+/);
+    const flowServices = services
+      ? services.split(",").map((id) => id.trim()).filter(Boolean)
+      : null;
+    return {
+      repo,
+      kind: kindForCommand(bin, args),
+      command: bin,
+      args,
+      summary: "Configured in RLAND_CHECKS.",
+      flowServices,
+    };
+  });
+}
+
+function kindForCommand(bin, args) {
+  if ((bin === "pnpm" || bin === "npm") && args[0] === "test:e2e") return "playwright";
+  if (bin === "pnpm" || bin === "npm") return "node";
+  if (bin === "make") return "make";
+  return "custom";
+}
+
+export function mergeChecks(base, extra) {
+  const byRepo = new Map(base.map((check) => [check.repo, check]));
+  for (const check of extra) byRepo.set(check.repo, check);
+  return [...byRepo.values()];
+}
+
+/** `id|url|required` entries. `optional` is the only non-required flag. Blank means the built-in probes. */
+export function parseProbeList(text) {
+  if (!text || !text.trim()) return null;
+  return text.split(";").map((entry) => entry.trim()).filter(Boolean).map((entry) => {
+    const [id, url, flag = "required"] = entry.split("|").map((part) => part.trim());
+    if (!id || !url) throw new Error(`Bad RLAND_PROBES entry "${entry}". Use id|url|required`);
+    return { id, url, required: flag !== "optional" };
+  });
+}
+
+export function inferCheck({ repo, packageJson, makefile }) {
+  if (packageJson) {
+    try {
+      const parsed = JSON.parse(packageJson);
+      const scripts = parsed.scripts ?? {};
+      const bin = String(parsed.packageManager || "").startsWith("npm@") ? "npm" : "pnpm";
+      if (scripts["test:e2e"]) {
+        return checkFromCommand(repo, `${bin} test:e2e`, "Discovered from package.json.");
+      }
+      if (scripts.test) {
+        return checkFromCommand(repo, `${bin} test`, "Discovered from package.json.");
+      }
+    } catch {
+      // not JSON; fall through to the Makefile
     }
   }
-  return { yes, json, save, root, mode, runner, repos };
+  if (makefile && /^test:/m.test(makefile)) {
+    return checkFromCommand(repo, "make test", "Discovered from the Makefile.");
+  }
+  return {
+    repo,
+    kind: "none",
+    command: null,
+    args: [],
+    summary: "No automated suite.",
+    flowServices: null,
+  };
+}
+
+function checkFromCommand(repo, commandText, summary) {
+  const [parsed] = parseCheckList(`${repo}|${commandText}`);
+  return { ...parsed, summary };
 }
 
 export function individualCommand(makefile, packageJson) {
@@ -229,7 +314,11 @@ export function upsertEnvAssignments(text, assignments) {
   return `${lines.join("\n")}\n`;
 }
 
-export function resolveWorkspace({ repoRoot, env = {}, exists }) {
+function looksLikeRlandWorkspace(candidate, exists) {
+  return exists(path.join(candidate, "rland-ui")) || exists(path.join(candidate, "rland-infra"));
+}
+
+export function resolveWorkspace({ repoRoot, env = {}, exists, siblingNames = [] }) {
   if (env.RLAND_ROOT) {
     if (!exists(env.RLAND_ROOT)) {
       throw new Error(`RLAND_ROOT does not exist: ${env.RLAND_ROOT}`);
@@ -237,20 +326,31 @@ export function resolveWorkspace({ repoRoot, env = {}, exists }) {
     return env.RLAND_ROOT;
   }
   const parent = path.dirname(repoRoot);
-  for (const name of WORKSPACE_DIR_NAMES) {
+  const ownName = path.basename(repoRoot);
+  const ordered = [
+    ...WORKSPACE_DIR_NAMES,
+    ...siblingNames.filter((name) => !WORKSPACE_DIR_NAMES.includes(name)),
+  ];
+  const candidates = [];
+  for (const name of ordered) {
+    if (!name || name.startsWith(".") || name === ownName) continue;
     const candidate = path.join(parent, name);
-    if (exists(path.join(candidate, "rland-ui")) || exists(path.join(candidate, "rland-infra"))) {
-      return candidate;
-    }
+    if (!candidates.includes(candidate)) candidates.push(candidate);
   }
-  if (exists(path.join(parent, "rland-ui")) || exists(path.join(parent, "rland-infra"))) {
+  for (const candidate of candidates) {
+    if (looksLikeRlandWorkspace(candidate, exists)) return candidate;
+  }
+  for (const candidate of candidates) {
+    if (exists(path.join(candidate, ".bluesurf-workspace"))) return candidate;
+  }
+  if (looksLikeRlandWorkspace(parent, exists) || exists(path.join(parent, ".bluesurf-workspace"))) {
     return parent;
   }
   return null;
 }
 
-export function stackReport(results) {
-  const checks = STACK_PROBES.map((probe) => {
+export function stackReport(results, probes = STACK_PROBES) {
+  const checks = probes.map((probe) => {
     const found = results.find((result) => result.id === probe.id);
     return { ...probe, up: Boolean(found?.up) };
   });
@@ -279,14 +379,15 @@ export function buildVerifyPlan({
   tools = {},
   stack = stackReport([]),
   run = DEFAULT_RUN,
+  catalog = REPO_CHECKS,
 }) {
   const named = repoNames.length > 0;
   const dirtySet = new Set(dirty);
   const existing = new Set(existingRepos);
   const files = new Set(existingFiles);
   const selected = named
-    ? REPO_CHECKS.filter((check) => repoNames.includes(check.repo))
-    : REPO_CHECKS.filter((check) => existing.has(check.repo) && dirtySet.has(check.repo));
+    ? repoNames.map((repo) => catalog.find((check) => check.repo === repo) || unknownCheck(repo))
+    : catalog.filter((check) => existing.has(check.repo) && dirtySet.has(check.repo));
 
   const checks = selected.map((check) => assessCheck(check, {
     workspace,
@@ -299,7 +400,18 @@ export function buildVerifyPlan({
     run,
   }));
 
-  return { workspace, stack, run, checks };
+  return { workspace, stack, run, checks, catalog: catalog.map((check) => check.repo) };
+}
+
+function unknownCheck(repo) {
+  return {
+    repo,
+    kind: "unknown",
+    command: null,
+    args: [],
+    summary: "Not in the catalog.",
+    flowServices: null,
+  };
 }
 
 function assessCheck(check, { workspace, named, dirty, present, files, tools, stack, run }) {
@@ -318,6 +430,9 @@ function assessCheck(check, { workspace, named, dirty, present, files, tools, st
     flow,
   };
 
+  if (check.kind === "unknown") {
+    return { ...base, canRun: false, reason: `unknown repo ${check.repo}` };
+  }
   if (!present) {
     return { ...base, canRun: false, reason: `repo not found at ${cwd}` };
   }
@@ -332,7 +447,16 @@ function assessCheck(check, { workspace, named, dirty, present, files, tools, st
     return { ...base, canRun: false, reason: "no automated suite" };
   }
   if (check.kind === "playwright") {
-    return { ...base, ...playwrightReadiness({ workspace, repo: check.repo, files, tools }) };
+    return { ...base, ...playwrightReadiness({ check, workspace, repo: check.repo, files, tools }) };
+  }
+  if (check.kind === "node") {
+    return { ...base, ...nodeReadiness({ check, workspace, repo: check.repo, files, tools }) };
+  }
+  if (check.kind === "make") {
+    return { ...base, ...makeReadiness({ workspace, repo: check.repo, files }) };
+  }
+  if (check.kind === "custom") {
+    return { ...base, canRun: true, reason: null };
   }
   return { ...base, ...goReadiness({ workspace, repo: check.repo, files, tools }) };
 }
@@ -367,7 +491,31 @@ function assessFlow(check, stack, run) {
   return { via: runner, services: check.flowServices, command: null, canRun: true, reason: null };
 }
 
-function playwrightReadiness({ workspace, repo, files, tools }) {
+function playwrightReadiness({ check, workspace, repo, files, tools }) {
+  const version = nodeReady(tools);
+  if (version) return version;
+  const bin = packageBinReady(check, tools);
+  if (bin) return bin;
+  const config = `${repo}/playwright.config.ts`;
+  if (!files.has(config)) {
+    return { canRun: false, reason: `${config} is missing under ${workspace}` };
+  }
+  return { canRun: true, reason: null };
+}
+
+function nodeReadiness({ check, workspace, repo, files, tools }) {
+  const version = nodeReady(tools);
+  if (version) return version;
+  const bin = packageBinReady(check, tools);
+  if (bin) return bin;
+  const pkg = `${repo}/package.json`;
+  if (!files.has(pkg)) {
+    return { canRun: false, reason: `${pkg} is missing under ${workspace}` };
+  }
+  return { canRun: true, reason: null };
+}
+
+function nodeReady(tools) {
   const version = tools.nodeVersion ?? "";
   if (!nodeVersionAtLeast(version, 22, 0, 0)) {
     return {
@@ -375,10 +523,20 @@ function playwrightReadiness({ workspace, repo, files, tools }) {
       reason: `Node ${version || "unknown"} is below 22. Run: source ~/.nvm/nvm.sh && nvm use 22`,
     };
   }
-  if (!tools.pnpm) return { canRun: false, reason: "pnpm is not on PATH" };
-  const config = `${repo}/playwright.config.ts`;
-  if (!files.has(config)) {
-    return { canRun: false, reason: `${config} is missing under ${workspace}` };
+  return null;
+}
+
+function packageBinReady(check, tools) {
+  const bin = check.command || "pnpm";
+  if (bin === "pnpm" && !tools.pnpm) return { canRun: false, reason: "pnpm is not on PATH" };
+  if (bin === "npm" && !tools.npm) return { canRun: false, reason: "npm is not on PATH" };
+  return null;
+}
+
+function makeReadiness({ workspace, repo, files }) {
+  const makefile = `${repo}/Makefile`;
+  if (!files.has(makefile)) {
+    return { canRun: false, reason: `${makefile} is missing under ${workspace}` };
   }
   return { canRun: true, reason: null };
 }
@@ -416,7 +574,8 @@ export function formatVerifyPlan(plan) {
   lines.push("");
   lines.push("Checks:");
   if (plan.checks.length === 0) {
-    lines.push("  No dirty repos. Name one or more: " + [...KNOWN].join(", "));
+    const names = plan.catalog?.length ? plan.catalog : [...KNOWN];
+    lines.push("  No dirty repos. Name one or more: " + names.join(", "));
   } else {
     for (const check of plan.checks) {
       const verdict = check.canRun ? "can run    " : "cannot run ";
@@ -483,6 +642,22 @@ export async function runVerifyPlan(plan, run) {
   };
 }
 
+export function emitCli({ json = false, payload, text, notes = [] } = {}, write = {}) {
+  const out = write.out ?? console.log;
+  const err = write.err ?? console.error;
+  if (json) {
+    for (const note of notes) {
+      if (note) err(note);
+    }
+    out(JSON.stringify(payload));
+    return;
+  }
+  if (text != null) out(text);
+  for (const note of notes) {
+    if (note) out(note);
+  }
+}
+
 export function probeUrl(url, { timeoutMs = 3000 } = {}) {
   const lib = url.startsWith("https:") ? https : http;
   return new Promise((resolve) => {
@@ -546,27 +721,47 @@ export async function collectVerifyPlan({
   mode = null,
   runner = null,
 }) {
+  const probes = parseProbeList(env.RLAND_PROBES) ?? STACK_PROBES;
+  let catalog = mergeChecks(REPO_CHECKS, parseCheckList(env.RLAND_CHECKS || ""));
   if (!workspace) {
     return buildVerifyPlan({
       workspace: null,
       repoNames,
-      stack: stackReport([]),
+      catalog,
+      stack: stackReport([], probes),
       run: resolveRunMode({ env, mode, runner }),
     });
+  }
+  for (const repo of repoNames) {
+    if (catalog.some((check) => check.repo === repo)) continue;
+    const dir = path.join(workspace, repo);
+    if (!(await pathExists(dir))) {
+      catalog = [...catalog, unknownCheck(repo)];
+      continue;
+    }
+    const pkgPath = path.join(dir, "package.json");
+    const makePath = path.join(dir, "Makefile");
+    const packageJson = (await pathExists(pkgPath)) ? await readFile(pkgPath, "utf8") : null;
+    const makefile = (await pathExists(makePath)) ? await readFile(makePath, "utf8") : null;
+    catalog = [...catalog, inferCheck({ repo, packageJson, makefile })];
   }
   const existingRepos = [];
   const dirty = [];
   const existingFiles = [];
   const layoutFiles = [];
-  for (const check of REPO_CHECKS) {
+  for (const check of catalog) {
+    if (check.kind === "unknown") continue;
     const dir = path.join(workspace, check.repo);
     if (!(await pathExists(dir))) continue;
     existingRepos.push(check.repo);
     if (await readGitDirty(dir)) dirty.push(check.repo);
+    if ((check.kind === "playwright" || check.kind === "node") && (await pathExists(path.join(dir, "package.json")))) {
+      existingFiles.push(`${check.repo}/package.json`);
+    }
     if (check.kind === "playwright" && (await pathExists(path.join(dir, "playwright.config.ts")))) {
       existingFiles.push(`${check.repo}/playwright.config.ts`);
     }
-    if (check.kind === "go" && (await pathExists(path.join(dir, "Makefile")))) {
+    if ((check.kind === "go" || check.kind === "make") && (await pathExists(path.join(dir, "Makefile")))) {
       existingFiles.push(`${check.repo}/Makefile`);
     }
     for (const relative of LAYOUT_FILES) {
@@ -576,17 +771,23 @@ export async function collectVerifyPlan({
     }
   }
   const results = await Promise.all(
-    STACK_PROBES.map(async (item) => ({ id: item.id, up: await probe(item.url) })),
+    probes.map(async (item) => ({ id: item.id, up: await probe(item.url) })),
   );
-  const [pnpm, go] = await Promise.all([commandOnPath("pnpm"), commandOnPath("go")]);
+  const needsNpm = catalog.some((check) => check.command === "npm");
+  const [pnpm, go, npm] = await Promise.all([
+    commandOnPath("pnpm"),
+    commandOnPath("go"),
+    needsNpm ? commandOnPath("npm") : Promise.resolve(false),
+  ]);
   return buildVerifyPlan({
     workspace,
     repoNames,
+    catalog,
     dirty,
     existingRepos,
     existingFiles,
-    tools: { nodeVersion, pnpm, go },
-    stack: stackReport(results),
+    tools: { nodeVersion, pnpm, go, npm },
+    stack: stackReport(results, probes),
     run: resolveRunMode({ env, discovery: discoverRunLayout(layoutFiles), mode, runner }),
   });
 }

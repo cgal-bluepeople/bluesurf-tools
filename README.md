@@ -133,10 +133,14 @@ Plan which RLand repos can be validated, and whether the local stack is up. Does
 
 **Does:**
 
-1. Finds the workspace (`RLAND_ROOT`, or a sibling `rland-new` / `RLand` / `rland`).
+1. Finds the workspace (`RLAND_ROOT`, a sibling `rland-new` / `RLand` / `rland` with `rland-ui` or `rland-infra`, or a directory that contains `.bluesurf-workspace`). Another project does not need `rland-ui`.
 2. Searches how the repos run. A compose file that builds sibling repos is a stack runner (`rland-infra` → `make local-up-detached`). A `make run`, `make dev`, or `pnpm dev` is that repo on its own. If both exist and `RLAND_RUN_MODE` is unset, the plan asks which one to use. `--save` writes the choice to `.env`.
-3. Probes the local stack (proxy, rland-web, loader-web, auth, core, collab, mock-oidc). In stack mode each repo's flow is its own services on that runner. In individual mode the flow is the repo's own command and the stack is not the gate. Playwright e2e does not use the stack either way.
-4. Prints whether each check can run (Node 22 and pnpm for Playwright; `go` and a Makefile for Go). Nothing runs until the mode is chosen and `--yes` is passed.
+3. Probes the local stack (proxy, rland-web, loader-web, auth, core, collab, mock-oidc, mcp on `:8082`). `RLAND_PROBES` replaces that list. In stack mode each repo's flow is its own services on that runner. In individual mode the flow is the repo's own command and the stack is not the gate. Playwright e2e does not use the stack either way.
+4. Prints whether each check can run. Built-in suites: `rland-ui` `pnpm test:e2e`, Go repos `make test`, `rland-mcp` `pnpm test`. `RLAND_CHECKS` overrides or adds repos (`repo|command|services`). A named directory that is not in the catalog is inferred from `package.json` or a Makefile `test` target. Nothing runs until the mode is chosen and `--yes` is passed.
+
+`--json` writes one JSON object to stdout. Notices go to stderr.
+
+This is the local suite and stack check. **functional-test** is the Surf ticket gate (`RLand/Tickets/PRY-XXX/validation/`). The RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`) is separate.
 
 ```bash
 npm run verify                         # preview dirty repos
@@ -154,7 +158,9 @@ Update every saved repo from its base branch before creating a feature branch.
 
 **Does:**
 
-1. Uses `RLAND_REPOS` and `RLAND_BASE` when they are set, and does not scan the workspace. The first run discovers repos that have `origin/<base>` (default `dev`). `--save` stores that list.
+1. Uses `RLAND_REPOS` and `RLAND_BASE` when they are set, and does not scan the workspace. The first run discovers repos that have `origin/<base>` (default `dev`). `--save` stores that list. Another project sets `RLAND_ROOT`, `RLAND_BASE`, and `RLAND_REPOS`.
+
+`--json` writes one JSON object to stdout. Notices go to stderr.
 2. Fetches `origin/<base>`. A clean repo on that branch fast-forwards, or merges when both sides have commits. A dirty tree is stashed and restored. Another checked-out branch only fast-forwards the local base ref.
 3. A content conflict aborts that repo's merge and is reported. Nothing is reset and no side is picked. Do not create the new branch until that repo is clean.
 
