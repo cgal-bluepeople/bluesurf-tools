@@ -140,7 +140,15 @@ Plan which RLand repos can be validated, and whether the local stack is up. Does
 
 `--json` writes one JSON object to stdout. Notices go to stderr.
 
-This is the local suite and stack check. **functional-test** is the Surf ticket gate (`RLand/Tickets/PRY-XXX/validation/`). The RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`) is separate.
+Playwright in this command opens the running app. It tests a change, or it runs a ticket's functional checks.
+
+```bash
+npm run verify -- --playwright                 # preview: open the app
+npm run verify -- --yes --playwright           # browser check, report in .scratch/playwright/
+npm run verify -- --yes --playwright --ticket PRY-12
+```
+
+Ticket lines in `validation/checks.md` are `open /path`, `see "text"`, and `url /path`. The report is `RLand/Tickets/PRY-12/validation/report.md`. `RLAND_APP_URL` overrides the base address. `pnpm test:e2e` stays the mocked UI suite and is not this browser test. The RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`) is separate.
 
 ```bash
 npm run verify                         # preview dirty repos

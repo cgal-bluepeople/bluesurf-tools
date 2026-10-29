@@ -22,7 +22,7 @@ Settled before you start:
 
 | Signal | Path |
 | --- | --- |
-| Functional checks or ticket imply browser/UI | **Playwright subagent** (below) |
+| Functional checks or ticket imply browser/UI | **Playwright against the running app** (below) |
 | Otherwise | **Smoke matrix** (below) |
 
 Always run one path; non-UI work still gets a smoke matrix pass.
@@ -38,32 +38,29 @@ In the implementation workspace (current cwd):
 
 Done when the chosen command exits 0. On failure, go to **Failure loop**.
 
-### 3. Playwright subagent
+### 3. Playwright against the running app
 
-Spawn a **Task** subagent (generalPurpose or equivalent) with a single job:
+This is the ticket test. Do not run `pnpm test:e2e`. That suite mocks the API.
 
-- Work in the **implementation repo** cwd.
-- Do **not** start or stop the dev server; use the base URL from AGENTS.md.
-- Reuse **storageState** or env test credentials when AGENTS.md documents them; otherwise call **wizard** once to capture auth, then reuse storageState for reruns in the same ticket.
-- If the repo has no Playwright dependency, use **`npx playwright`** with an ephemeral script (do not add `@playwright/test` to the repo unless the human asks).
-- Execute every bullet under **Functional checks** from the confirmed plan against the running app.
-- On failure: save trace/screenshot; on pass: screenshot key states.
-- Return a short structured result: pass/fail, commands run, paths to artifacts.
+1. Translate every **Functional checks** bullet into executable lines and write them to `RLand/Tickets/{code}/validation/checks.md` before the command:
 
-Parent agent: wait for the subagent, then write artifacts (step 4).
+   ```markdown
+   ## Functional checks
+   - open /agreements
+   - see "Agreements"
+   - url /agreements
+   ```
+
+   `open` loads a path on the running app. `see` requires that text. `url` requires the address to contain the fragment. Any other bullet fails the run.
+2. From bluesurf-tools: `npm run verify -- --json --playwright --ticket {code}`. Stdout is one JSON object. `playwright.canRun` must be true. If the app URL is down, say so and stop. Do not start Docker unless the human asks.
+3. Run `npm run verify -- --yes --playwright --ticket {code}`.
+4. Exit 0 and `validation/report.md` with `Result: pass` means the ticket checks passed. Screenshots are next to the report. On fail, read the report and go to **Failure loop**.
 
 ### 4. Validation folder (vault)
 
-Under the BluePeople vault (see **bluesurf-ticket** / `OBSIDIAN_VAULT`):
+The command writes `RLand/Tickets/{code}/validation/report.md` and the screenshots. Do not rewrite that report by hand.
 
-`RLand/Tickets/{code}/validation/`
-
-Write:
-
-- `report.md` — what ran, pass/fail, links to screenshots, subagent notes (redact secrets).
-- Screenshots (and trace zip on failure) alongside the report.
-
-Give the human a **brief summary in chat**. Done when `validation/report.md` exists and reflects the latest run.
+Give the human a **brief summary in chat**. Done when `validation/report.md` exists and its result is `pass`.
 
 ## Failure loop
 

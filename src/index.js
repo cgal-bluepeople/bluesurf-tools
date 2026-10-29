@@ -3,6 +3,13 @@ export { exportSprint } from "./export-sprint.js";
 export { exportSprintReview, defaultReviewSprintNumber } from "./export-sprint-review.js";
 export { exportTicket } from "./export-ticket.js";
 export { createSessionClient, createSessionRequest, profileDir } from "./session.js";
+export {
+  formatPlaywrightReport,
+  parseFunctionalChecks,
+  planPlaywright,
+  resolveAppUrl,
+  runPlaywrightSteps,
+} from "./playwright-flow.js";
 export { createVault, safeFileName } from "./vault.js";
 export {
   applyRepoUpdate,

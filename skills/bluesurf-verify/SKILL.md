@@ -7,7 +7,7 @@ Run from the bluesurf-tools checkout: the directory that contains `scripts/verif
 
 `RLAND_ROOT` in `.env` is the workspace. A sibling `rland-new`, `RLand`, or `rland` with `rland-ui` or `rland-infra` is the default. Another project sets `RLAND_ROOT`, or an empty `.bluesurf-workspace` file in that directory. It does not need `rland-ui`.
 
-This plans suites and whether the local flow is up. It is not **functional-test** (Surf ticket acceptance under `RLand/Tickets/PRY-XXX/validation/`) and it is not the RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`).
+Playwright here opens the running app. Use it to test a change, or to validate a ticket. `pnpm test:e2e` is a separate mocked suite. This is not the RLand code-review gate (`pnpm quality`, `gofmt`, `go vet`, `schema-check`).
 
 ## Preview
 
@@ -18,17 +18,23 @@ This plans suites and whether the local flow is up. It is not **functional-test*
 3. Read `stack.ready` and each check's `canRun` / `reason`. If `reason` says Node is below 22, re-run this preview in the same shell after `source ~/.nvm/nvm.sh && nvm use 22`. Do not install Node. Use that shell for `--yes` too.
 4. Ask which repos to run. One question, multi-select. Recommended: every check with `canRun: true` or `flow.canRun: true`. Include each planned repo. If the plan is empty, offer `catalog` (`rland-ui`, `rland-core`, `rland-auth`, `rland-collab`, `rland-commons`, `rland-ngam`, `rland-mcp`, plus `RLAND_CHECKS`). A name that exists under the workspace and is not in the catalog is inferred from `package.json` or the Makefile. Stop after the answer unless they pick some.
 5. Tell them, in the same turn as the question, only what the JSON already decided:
-   - `run.mode` `stack`: `flow.via` is the runner and `flow.services` are the probes that repo needs. One service being down does not block another repo. `rland-ngam` has no host port. Playwright e2e does not use the stack.
+   - `run.mode` `stack`: `flow.via` is the runner and `flow.services` are the probes that repo needs. One service being down does not block another repo. `rland-ngam` has no host port.
    - `run.mode` `individual`: `flow.command` is that repo's own process. The infra stack is not the gate.
-   - `command` / `canRun` is the suite (`pnpm test:e2e` or `make test`).
-   - Do not start Docker or a repo process unless they ask. If `flow.canRun` is false, say `flow.reason`.
+   - `command` / `canRun` is the repo suite (`pnpm test:e2e` or `make test`). `pnpm test:e2e` mocks the API. It is not the change or ticket browser test.
+   - `playwright` is present when they asked to test a change in the browser or to validate a ticket. `playwright.baseUrl` is the running app (`RLAND_APP_URL`, else the proxy, else rland-web). Do not start Docker or a repo process unless they ask. If `flow.canRun` or `playwright.canRun` is false, say the `reason`.
 
 Do not pass `--yes` in the preview turn.
 
 ## Run
 
-When they pick repos, or they already said to run a named repo:
+When they want Playwright for a change, or a ticket validation:
 
-1. `npm run verify -- --yes rland-ui` (one argument per repo they picked).
+1. Preview with `npm run verify -- --json --playwright`. For a ticket, add `--ticket PRY-XXX`. The ticket's checks live in `validation/checks.md` (or `## Functional checks` in `detail.md`) as `open`, `see`, and `url` lines. **functional-test** writes that file.
+2. `npm run verify -- --yes --playwright` opens the running app and writes `.scratch/playwright/report.md`. `npm run verify -- --yes --playwright --ticket PRY-XXX` writes `RLand/Tickets/PRY-XXX/validation/report.md` and screenshots. Exit 0 means every browser check passed.
+3. A named repo suite is separate: `npm run verify -- --yes rland-core` runs `make test`. `--playwright` does not run `pnpm test:e2e`.
+
+When they pick repo suites and did not ask for the browser:
+
+1. `npm run verify -- --yes rland-core` (one argument per repo they picked).
 2. Exit 0 means every selected suite ran and passed. `rland-infra` has no suite: exit 0 means its flow services were up.
 3. Exit non-zero means a command failed, a selected suite could not run, or they named nothing. A repo flow that is down does not by itself fail a suite run; it is already in the preview. Report the skipped `reason` and the command exit codes. Do not retry a blocked check by installing toolchains or bringing the stack up unless they ask.

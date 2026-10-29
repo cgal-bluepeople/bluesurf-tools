@@ -3,6 +3,7 @@ import http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { parseTicketKey } from "./model.js";
 import { nodeVersionAtLeast } from "./skills-cli.js";
 import { spawnSpec } from "./spawn-command.js";
 
@@ -101,28 +102,32 @@ export function parseVerifyArgs(argv) {
   const yes = argv.includes("--yes");
   const json = argv.includes("--json");
   const save = argv.includes("--save");
+  const playwright = argv.includes("--playwright") || argv.includes("--ticket");
   let root;
   let mode = null;
   let runner = null;
+  let ticket = null;
   const repos = [];
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--yes" || arg === "--json" || arg === "--save") continue;
-    if (arg === "--root" || arg === "--mode" || arg === "--runner") {
+    if (arg === "--yes" || arg === "--json" || arg === "--save" || arg === "--playwright") continue;
+    if (arg === "--root" || arg === "--mode" || arg === "--runner" || arg === "--ticket") {
       const value = argv[i + 1];
       if (!value || value.startsWith("--")) {
-        throw new Error("Usage: npm run verify -- [--json] [--yes] [--save] [--mode stack|individual] [--runner repo] [--root path] [repo...]");
+        throw new Error("Usage: npm run verify -- [--json] [--yes] [--save] [--playwright] [--ticket PRY-XXX] [--mode stack|individual] [--runner repo] [--root path] [repo...]");
       }
       if (arg === "--root") root = value;
       if (arg === "--mode") mode = value;
       if (arg === "--runner") runner = value;
+      if (arg === "--ticket") ticket = value;
       i += 1;
       continue;
     }
     if (arg.startsWith("--")) throw new Error(`Unknown flag ${arg}`);
     repos.push(arg);
   }
-  return { yes, json, save, root, mode, runner, repos };
+  if (ticket) parseTicketKey(ticket);
+  return { yes, json, save, playwright: playwright || Boolean(ticket), root, mode, runner, ticket, repos };
 }
 
 /** `repo|command|service,service` entries, separated by `;`. Blank services means none. */
@@ -570,7 +575,17 @@ export function formatVerifyPlan(plan) {
       : "Real flow against localhost: not ready.",
   );
   lines.push(...formatRunMode(plan.run));
-  lines.push("Playwright e2e does not use this stack. It starts its own servers and mocks the API.");
+  lines.push("pnpm test:e2e starts its own servers and mocks the API. It is not the change or ticket browser test.");
+  if (plan.playwright) {
+    const flow = plan.playwright;
+    const title = flow.ticket ? `Ticket ${flow.ticket}` : "Playwright change check";
+    lines.push(flow.canRun
+      ? `${title}: can run ${flow.baseUrl}`
+      : `${title}: cannot run. ${flow.reason}`);
+    for (const step of flow.steps) {
+      lines.push(`  ${step.source}`);
+    }
+  }
   lines.push("");
   lines.push("Checks:");
   if (plan.checks.length === 0) {

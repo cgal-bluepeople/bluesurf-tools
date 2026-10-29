@@ -30,11 +30,15 @@ describe("parseVerifyArgs", () => {
       yes: true,
       json: true,
       save: false,
+      playwright: false,
       root: "/work/rland-new",
       mode: null,
       runner: null,
+      ticket: null,
       repos: ["rland-ui"],
     });
+    assert.equal(parseVerifyArgs(["--playwright", "--ticket", "PRY-12"]).ticket, "PRY-12");
+    assert.equal(parseVerifyArgs(["--playwright"]).playwright, true);
   });
 
   it("accepts a repo name that is not in the built-in catalog", () => {

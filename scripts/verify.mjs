@@ -1,9 +1,16 @@
 import { existsSync, readdirSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { loadEnvFile } from "../src/env.js";
+import {
+  formatPlaywrightReport,
+  planPlaywright,
+  playwrightForJson,
+  resolveAppUrl,
+  runPlaywrightSteps,
+} from "../src/playwright-flow.js";
 import { spawnSpec } from "../src/spawn-command.js";
 import {
   collectVerifyPlan,
@@ -71,6 +78,24 @@ if (parsed.save) {
   notes.push(`Saved RLAND_RUN_MODE=${parsed.mode} in ${envPath}`);
 }
 
+if (parsed.playwright) {
+  let loaded = null;
+  if (parsed.ticket) {
+    try {
+      loaded = await loadTicketMarkdown(env, parsed.ticket);
+    } catch (error) {
+      console.error(error.message);
+      process.exit(1);
+    }
+  }
+  plan.playwrightDir = loaded?.dir ?? path.join(root, ".scratch", "playwright");
+  plan.playwright = planPlaywright({
+    baseUrl: resolveAppUrl({ env, stack: plan.stack }),
+    ticket: parsed.ticket,
+    markdown: loaded?.markdown ?? "",
+  });
+}
+
 if (!parsed.yes) {
   emitCli({
     json: parsed.json,
@@ -85,24 +110,123 @@ if (!parsed.json) {
   console.log(formatVerifyPlan(plan));
   for (const note of notes) console.log(note);
 }
-const outcome = await runVerifyPlan(plan, runCommand);
+const suitePlan = parsed.playwright
+  ? { ...plan, checks: plan.checks.filter((check) => check.kind !== "playwright") }
+  : plan;
+let outcome = { ok: true, results: [], blocked: [] };
+if (!parsed.playwright || suitePlan.checks.length > 0) {
+  outcome = await runVerifyPlan(suitePlan, runCommand);
+}
+let playwrightOutcome = null;
+if (parsed.playwright) {
+  playwrightOutcome = await runBrowser(plan);
+  outcome = { ...outcome, ok: outcome.ok && playwrightOutcome.ok };
+}
+const payload = {
+  ...plan,
+  playwright: playwrightForJson(playwrightOutcome
+    ? { ...plan.playwright, ...playwrightOutcome }
+    : plan.playwright),
+  outcome,
+};
 if (parsed.json) {
-  emitCli({ json: true, payload: { ...plan, outcome }, notes });
+  emitCli({ json: true, payload, notes });
 } else {
   for (const result of outcome.results) {
     console.log(`${result.repo}: exit ${result.code}`);
   }
+  if (playwrightOutcome) {
+    console.log(formatPlaywrightReport({
+      ticket: plan.playwright?.ticket,
+      baseUrl: plan.playwright?.baseUrl,
+      results: playwrightOutcome.results,
+    }));
+    if (playwrightOutcome.reportPath) console.log(`Report: ${playwrightOutcome.reportPath}`);
+  }
   if (outcome.blocked.length > 0) {
     console.error(`Skipped (cannot run): ${outcome.blocked.join(", ")}`);
   }
-  if (!plan.workspace) {
+  if (!plan.workspace && !parsed.playwright) {
     console.error("Cannot run without a workspace. Set RLAND_ROOT.");
   }
-  if (plan.checks.length === 0) {
-    console.error("Nothing to run. Name a repo.");
+  if (plan.checks.length === 0 && !parsed.playwright) {
+    console.error("Nothing to run. Name a repo, or pass --playwright.");
+  }
+  if (playwrightOutcome && !playwrightOutcome.ok && playwrightOutcome.reason) {
+    console.error(playwrightOutcome.reason);
   }
 }
 process.exit(outcome.ok ? 0 : 1);
+
+async function loadTicketMarkdown(env, ticket) {
+  const vault = env.OBSIDIAN_VAULT;
+  if (!vault) throw new Error("Set OBSIDIAN_VAULT to validate a ticket.");
+  const ticketsDir = env.OBSIDIAN_TICKETS_DIR || "RLand/Tickets";
+  const dir = path.join(vault, ticketsDir, ticket, "validation");
+  const checksFile = path.join(dir, "checks.md");
+  const detail = path.join(vault, ticketsDir, ticket, "detail.md");
+  if (existsSync(checksFile)) return { dir, markdown: await readFile(checksFile, "utf8") };
+  if (existsSync(detail)) return { dir, markdown: await readFile(detail, "utf8") };
+  return { dir, markdown: "" };
+}
+
+async function runBrowser(current) {
+  const flow = current.playwright;
+  if (!flow?.canRun) {
+    return {
+      ok: false,
+      baseUrl: flow?.baseUrl ?? null,
+      ticket: flow?.ticket ?? null,
+      reason: flow?.reason ?? "playwright cannot run",
+      results: flow?.steps ?? [],
+    };
+  }
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: process.env.RLAND_HEADED !== "1" });
+  try {
+    const page = await browser.newPage();
+    const ran = await runPlaywrightSteps({
+      baseUrl: flow.baseUrl,
+      steps: flow.steps,
+      page: adaptPage(page),
+    });
+    await mkdir(current.playwrightDir, { recursive: true });
+    let index = 0;
+    for (const result of ran.results) {
+      if (!result.screenshot) continue;
+      index += 1;
+      const file = `${String(index).padStart(2, "0")}-${result.op}.png`;
+      await writeFile(path.join(current.playwrightDir, file), result.screenshot);
+      result.file = file;
+      delete result.screenshot;
+    }
+    const reportPath = path.join(current.playwrightDir, "report.md");
+    await writeFile(reportPath, formatPlaywrightReport({
+      ticket: flow.ticket,
+      baseUrl: flow.baseUrl,
+      results: ran.results,
+    }));
+    return { ...ran, reportPath, dir: current.playwrightDir };
+  } finally {
+    await browser.close();
+  }
+}
+
+function adaptPage(page) {
+  return {
+    goto: (url, opts) => page.goto(url, opts),
+    screenshot: (opts) => page.screenshot(opts),
+    url: () => page.url(),
+    see: async (text) => {
+      try {
+        await page.getByText(text, { exact: false }).first().waitFor({ state: "visible", timeout: 5000 });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  };
+}
 
 function siblingNames(repoRoot) {
   try {
