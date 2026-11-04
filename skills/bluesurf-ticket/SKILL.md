@@ -13,7 +13,7 @@ Repo: `~/Projects/bluesurf-tools`. Session is `.surf-cookies.json` there, loaded
 
 1. Take the ticket key from the user (`PRY-XXX` — project code plus work item number).
 2. From the repo: `npm run ticket -- PRY-XXX`.
-3. Done when `RLand/Tickets/PRY-XXX/detail.md` exists.
+3. Done when `Proyect/Tickets/PRY-XXX/detail.md` exists.
 
 Then **stop**. Read the note's tags.
 
@@ -26,7 +26,7 @@ When implementing a pulled ticket in the **implementation repo** (keep dev runni
 
 1. **Plan** — confirmed plan (from grill or regression scope) must include a **Functional checks** section (concrete pass/fail bullets for **functional-test**).
 2. **implement** — run the **implement** skill to completion (it drives **tdd**, **code-review**, and **commit**). For this Surf ticket, the commit subject ends with `({code})`, e.g. `(PRY-123)`.
-3. **functional-test** — hard gate; artifacts in `RLand/Tickets/{code}/validation/` (`report.md`, `manual-reproduction.md`, screenshots). On fail, follow **functional-test** failure loop (max 3 cycles), then repeat from step 2 as needed.
+3. **functional-test** — hard gate; artifacts in `Proyect/Tickets/{code}/validation/` (`report.md`, `manual-reproduction.md`, screenshots). On fail, follow **functional-test** failure loop (max 3 cycles), then repeat from step 2 as needed.
 4. **Complete** — only after step 3 passes: human says ticket complete or commit and push (see below).
 
 Do not run **bluesurf-ticket** complete or delete the vault folder until **functional-test** has passed.
@@ -39,4 +39,4 @@ When the user says the ticket is complete, or says to commit and push:
 2. If **functional-test** has not passed for this ticket, run **functional-test** first; do not complete until it passes.
 3. If they said commit and push: push the implementation repo branch (**implement** should already have committed). That phrase is push permission for this ticket. If there are uncommitted fixes after functional-test, commit with `({code})` on the subject, then push.
 4. From bluesurf-tools: `npm run ticket-done -- PRY-XXX`.
-5. Done when `RLand/Tickets/PRY-XXX/` is gone (including `validation/`). If they asked to push, the branch is also on the remote.
+5. Done when `Proyect/Tickets/PRY-XXX/` is gone (including `validation/`). If they asked to push, the branch is also on the remote.

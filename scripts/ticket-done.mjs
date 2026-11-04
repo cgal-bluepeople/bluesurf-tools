@@ -22,7 +22,7 @@ if (!vaultRoot) {
 
 const vault = createVault({
   root: vaultRoot,
-  ticketsDir: process.env.OBSIDIAN_TICKETS_DIR ?? "RLand/Tickets",
+  ticketsDir: process.env.OBSIDIAN_TICKETS_DIR ?? "Proyect/Tickets",
 });
 const removed = await vault.removeTicket(code);
 console.log(`Removed ${removed}`);

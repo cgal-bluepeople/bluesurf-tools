@@ -25,7 +25,7 @@ Complete SSO in the window that opens. It saves the session to `.surf-cookies.js
 
 When the session expires, the skills run `npm run login` for you: a window opens, you sign in, and the agent retries the command.
 
-`.env` points at `https://surf.bluepeople.com` and the BluePeople Obsidian vault (`RLand/Tickets`, `RLand/Sprints`).
+`.env` points at `https://surf.bluepeople.com` and the BluePeople Obsidian vault (`Proyect/Tickets`, `Proyect/Sprints`).
 
 ## `/bluesurf-ticket`
 
@@ -36,17 +36,17 @@ Pull one Surf work item into Obsidian, then stop. A ticket tagged Bugs Detected 
 **Does:**
 
 1. Reuses the saved session in headless Chromium.
-2. Writes `RLand/Tickets/PRY-XXX/detail.md` (title, priority, type, status, sprint, estimate, tags, attachment names, HTML description). A `Bugs Detected` tag also writes the comments.
-3. Downloads files into `RLand/Tickets/PRY-XXX/attachments/`.
+2. Writes `Proyect/Tickets/PRY-XXX/detail.md` (title, priority, type, status, sprint, estimate, tags, attachment names, HTML description). A `Bugs Detected` tag also writes the comments.
+3. Downloads files into `Proyect/Tickets/PRY-XXX/attachments/`.
 4. Stops. On `Bugs Detected`, the comments are the regressions to fix. Otherwise asks **grill vs implement**.
 
-**Work ticket** (implementation repo; keep dev running and document URL/auth in **AGENTS.md**): grill (plan includes **Functional checks**) → Matt **implement** (TDD, code-review, commit with `(PRY-XXX)`) → **functional-test** (detects harness + available browser tools; smoke matrix when needed; `report.md`, screenshots, and `manual-reproduction.md` under `RLand/Tickets/PRY-XXX/validation/`). Sequencing is in **bluesurf-ticket**; Matt Pocock skills stay unchanged.
+**Work ticket** (implementation repo; keep dev running and document URL/auth in **AGENTS.md**): grill (plan includes **Functional checks**) → Matt **implement** (TDD, code-review, commit with `(PRY-XXX)`) → **functional-test** (detects harness + available browser tools; smoke matrix when needed; `report.md`, screenshots, and `manual-reproduction.md` under `Proyect/Tickets/PRY-XXX/validation/`). Sequencing is in **bluesurf-ticket**; Matt Pocock skills stay unchanged.
 
 **Complete the ticket** only after functional-test passes:
 
 | You say | What happens |
 | --- | --- |
-| “The ticket is complete” | Deletes `RLand/Tickets/PRY-XXX/` from the vault (including `validation/`). |
+| “The ticket is complete” | Deletes `Proyect/Tickets/PRY-XXX/` from the vault (including `validation/`). |
 | “Commit and push” | Commits if needed, pushes the **implementation repo**, then deletes the vault folder. That phrase is push permission for this ticket. |
 
 Same as the CLIs:
@@ -67,9 +67,9 @@ Snapshot your assigned tickets on the current Surf sprint into Obsidian.
 1. Opens Chromium briefly to reuse the saved session.
 2. Loads tickets assigned to you on the latest sprint (highest-numbered `currentSprintName` on your cards; falls back to the most common `currentSprintId` if names have no number).
 3. For each ticket, reads reported hours from the work item (`totalExecuted`), not the board’s inflated `totalHours`.
-4. Writes or **rewrites** the note for that sprint (`RLand/Sprints/Sprint N.md`).
+4. Writes or **rewrites** the note for that sprint (`Proyect/Sprints/Sprint N.md`).
 
-**Vault file:** `RLand/Sprints/Sprint N.md` (e.g. `Sprint 14.md`); later runs update the same file.
+**Vault file:** `Proyect/Sprints/Sprint N.md` (e.g. `Sprint 14.md`); later runs update the same file.
 
 **Tables:**
 
@@ -157,5 +157,5 @@ npm run mine -- --json  # machine-readable, for agents
 Each person clones the repo and runs `npm run setup`, which writes `.env` when it is missing, asks for `OBSIDIAN_VAULT`, and keeps the Surf session on their machine. Rules for the harnesses they pick live in [`rules/`](rules/).
 
 - **Bugs Detected** tickets skip the grill question: the agent implements from the ticket’s **Comments** (copied from Surf). Treat pulled tickets like Surf content you already trust.
-- **Attachments** download into the vault under `RLand/Tickets/<code>/attachments/` (your vault may sync via iCloud or similar).
+- **Attachments** download into the vault under `Proyect/Tickets/<code>/attachments/` (your vault may sync via iCloud or similar).
 - **Commit and push** on a pulled ticket is explicit permission to push the implementation repo for that ticket.

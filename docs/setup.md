@@ -23,7 +23,7 @@ npm run setup -- --cursor --claude
 
 Setup does this, in order:
 
-1. If `.env` is missing, copies `.env.example` and asks for `OBSIDIAN_VAULT`. Set that variable in the environment to skip the question. An existing `.env` is left as it is. The other keys stay at the example defaults (`https://surf.bluepeople.com`, project `RLD`, `RLand/Tickets`, `RLand/Sprints`).
+1. If `.env` is missing, copies `.env.example` and asks for `OBSIDIAN_VAULT`. Set that variable in the environment to skip the question. An existing `.env` is left as it is. The other keys stay at the example defaults (`https://surf.bluepeople.com`, project `RLD`, `Proyect/Tickets`, `Proyect/Sprints`).
 2. Runs `npm install`.
 3. Installs the Matt Pocock skills for the harnesses you picked (`npx skills add mattpocock/skills`, global, the whole pack). Skip the Claude Code plugin `mattpocock-skills`; installing both shows every skill twice.
 4. Symlinks the Blue Surf skills from this repo into each selected harness, and into `~/.agents/skills` (the router reads that path). A later `git pull` updates the skills. After pulling a **new** Blue Surf skill, run `npm run link-skills` (all harnesses by default) or re-run setup for the harnesses you use — no login or Matt Pocock reinstall needed.
@@ -42,7 +42,7 @@ Do **not** run `/setup-matt-pocock-skills` here. That skill is per implementatio
 - Hand off the **git repo** (clone), not a zip or copy of someone’s working tree. Local-only files — `.surf-cookies.json`, `.chrome-profile/`, `.env`, and `.scratch/` — are gitignored and must stay on each person’s machine.
 - Everyone uses their **own** SSO via setup or `npm run login`. Sessions are not shared.
 - Use the **skills** (`bluesurf-move`, `bluesurf-ticket`, `functional-test`, …) in agent chats. They enforce preview/confirm for board moves; running `npm run move … --yes` directly skips that step.
-- In each **implementation repo**, add **AGENTS.md** from the template: copy [`templates/AGENTS.md.template`](../templates/AGENTS.md.template) to the project root as `AGENTS.md`, replace every `FILL:` placeholder, and adapt the environment/branch table. That file is what **functional-test** reads for base URL, health check, smoke commands, and auth paths.
+- In each **implementation repo**, add **AGENTS.md** from the template: copy [`templates/AGENTS.md.template`](../templates/AGENTS.md.template) to the project root as `AGENTS.md`, replace every `FILL:` placeholder, and adapt the environment/branch table. Fill **Verify (CI and local gates)** so agents run the same checks as GitHub Actions before **functional-test**. **Functional testing** there covers base URL, health, smoke, and auth.
 - Do **not** edit Matt Pocock skills locally. Surf-only steps (e.g. **functional-test** after **implement**) live in **bluesurf-ticket** and **functional-test** in this repo.
 - Tickets tagged **Bugs Detected** tell the agent to implement from Surf **comments** without a grill step. Description and comments are written into Obsidian as-is (HTML included).
 - Pulling a ticket downloads **attachments** into your vault. Only pull work items you would open in Surf anyway.

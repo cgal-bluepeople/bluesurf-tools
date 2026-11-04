@@ -12,7 +12,7 @@ describe("exportSprint", () => {
 
   beforeEach(async () => {
     root = await mkdtemp(path.join(os.tmpdir(), "bluesurf-sprint-"));
-    vault = createVault({ root, sprintsDir: "RLand/Sprints" });
+    vault = createVault({ root, ticketsDir: "RLand/Tickets", sprintsDir: "RLand/Sprints" });
   });
 
   afterEach(async () => {

@@ -229,7 +229,7 @@ describe("toSprintNote", () => {
       toSprintRow(flattenKanbanWorkItems(kanban)[3]),
     ];
     assert.equal(
-      toSprintNote(rows),
+      toSprintNote(rows, { ticketsDir: "RLand/Tickets" }),
       [
         "# Sprint 14",
         "",

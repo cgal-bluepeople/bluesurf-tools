@@ -8,11 +8,11 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | --- | --- |
 | Data access | Persistent Chrome profile + replay the SPA’s private JSON APIs. DOM scrape is fallback only. |
 | After `/bluesurf-ticket` | Write Obsidian note + attachments, then **stop**. If the note is tagged Bugs Detected, the comments are the regressions to fix. Otherwise ask grill vs implement. |
-| Ticket implement flow | grill (plan includes **Functional checks**) → Matt **implement** (tdd, code-review, commit with `(PRY-XXX)`) → **functional-test** (hard gate; `RLand/Tickets/PRY-XXX/validation/`) → complete / push. Orchestration in **bluesurf-ticket**; do not edit Matt Pocock skills. |
-| After the ticket is complete | Delete `RLand/Tickets/PRY-XXX/` entirely (including `validation/`). "The ticket is complete" or "commit and push" both complete it; complete only after functional-test passed. Commit and push also pushes the implementation repo. |
+| Ticket implement flow | grill (plan includes **Functional checks**) → Matt **implement** (tdd, code-review, commit with `(PRY-XXX)`) → **functional-test** (hard gate; `Proyect/Tickets/PRY-XXX/validation/`) → complete / push. Orchestration in **bluesurf-ticket**; do not edit Matt Pocock skills. |
+| After the ticket is complete | Delete `Proyect/Tickets/PRY-XXX/` entirely (including `validation/`). "The ticket is complete" or "commit and push" both complete it; complete only after functional-test passed. Commit and push also pushes the implementation repo. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
 | Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |
-| Obsidian | Vault `BluePeople` → `RLand/Tickets/RLD-100/detail.md`, files in `RLand/Tickets/RLD-100/attachments/`, sprint notes in `RLand/Sprints/Sprint N.md` |
+| Obsidian | Vault `BluePeople` → `Proyect/Tickets/RLD-100/detail.md`, files in `Proyect/Tickets/RLD-100/attachments/`, sprint notes in `Proyect/Sprints/Sprint N.md` |
 | Chrome | Dedicated Playwright profile at `.chrome-profile/` (gitignored). Equivalent to “Blue Surf agent”; not your daily Chrome (Chrome locks a profile while it is open). |
 
 ## Layers
@@ -26,16 +26,16 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 ### `/bluesurf-ticket RLD-100`
 
 1. Fetch ticket body, comments, metadata, attachment list.
-2. Write `RLand/Tickets/RLD-100/detail.md` in the BluePeople vault.
-3. Download attachments into `RLand/Tickets/RLD-100/attachments/`.
+2. Write `Proyect/Tickets/RLD-100/detail.md` in the BluePeople vault.
+3. Download attachments into `Proyect/Tickets/RLD-100/attachments/`.
 4. Stop. If the note is tagged Bugs Detected, the `## Comments` section is the regression work: follow diagnosing-bugs, then implement. Otherwise ask grill vs implement via the harness.
-5. When you say the ticket is complete, or say to commit and push, delete `RLand/Tickets/RLD-100/` entirely. Commit and push also commits the implementation repo with `(RLD-100)` on the subject and pushes.
+5. When you say the ticket is complete, or say to commit and push, delete `Proyect/Tickets/RLD-100/` entirely. Commit and push also commits the implementation repo with `(RLD-100)` on the subject and pushes.
 
 ### `/bluesurf-sprint`
 
 1. Fetch tickets assigned to you on the current sprint.
 2. Sort by priority.
-3. Write `RLand/Sprints/Sprint N.md` with title, estimated hours, type, tags, and ticket links.
+3. Write `Proyect/Sprints/Sprint N.md` with title, estimated hours, type, tags, and ticket links.
 
 ## Spike result (2026-09-10)
 
@@ -95,7 +95,7 @@ Each work item: `code`, `name`, `priority` / `priorityName`, `estimatedEffort`, 
 
 1. **Sprint list endpoint** — board filter still sends `sprints: []`. SPA source also has `POST /api/projectSprint` (save) and `POST /api/workItems/byProperty/sprint` (assign). No dedicated list GET in the captures. Keep inferring the current sprint from `currentSprintId` on kanban cards.
 2. **Attachments** — mapped from RLD-339 + SPA `downloadFile` / `getFileNames`. `npm run ticket -- PRY-XXX` writes `detail.md` and downloads `GET /api/workItem/{id}/file/{fileId}`.
-3. **Sprint note** — `npm run sprint` writes `RLand/Sprints/Sprint N.md` from `listMyCurrentSprintRows`, or rewrites the same file on later runs. `npm run sprint-review` does the same for Sprint N−1 (or an explicit sprint number): assigned tickets whose `currentSprintName` matches that sprint. Two tables: **Pending Tickets** (`Development (IN PROGRESS)`, `Analysis (IN PROGRESS)`, `Analysis (DONE)`, any `BLOCKED`) and **Done Tickets** (the rest). Estimate is `estimatedEffort`. Effort is **reported** hours (`totalExecuted` from `GET /api/workItem/{code}`; kanban `totalHours` is estimate×1.25 and is not used). Ordered by priority. Still no sprint-list GET; current sprint is the highest-numbered `currentSprintName` on your assigned cards. The most common `currentSprintId` was tried first and picked a past sprint: old sprints keep their cards, so a big old sprint outvotes a smaller current one.
+3. **Sprint note** — `npm run sprint` writes `Proyect/Sprints/Sprint N.md` from `listMyCurrentSprintRows`, or rewrites the same file on later runs. `npm run sprint-review` does the same for Sprint N−1 (or an explicit sprint number): assigned tickets whose `currentSprintName` matches that sprint. Two tables: **Pending Tickets** (`Development (IN PROGRESS)`, `Analysis (IN PROGRESS)`, `Analysis (DONE)`, any `BLOCKED`) and **Done Tickets** (the rest). Estimate is `estimatedEffort`. Effort is **reported** hours (`totalExecuted` from `GET /api/workItem/{code}`; kanban `totalHours` is estimate×1.25 and is not used). Ordered by priority. Still no sprint-list GET; current sprint is the highest-numbered `currentSprintName` on your assigned cards. The most common `currentSprintId` was tried first and picked a past sprint: old sprints keep their cards, so a big old sprint outvotes a smaller current one.
 
 ## Proposed client functions
 
@@ -114,8 +114,8 @@ Do not install skills yet. Implement these in `src/` next:
 - `listMyCurrentSprintWorkItems(projectCode)` — same list, keep items on the latest sprint (highest number in `currentSprintName`; most frequent `currentSprintId` as a fallback, or explicit `sprints` filter once we have an id).
 - `sortByPriority(items)` — `priority` descending (5 → 1).
 - `toSprintRow(item)` — `{ code, title, estimatedHours, type, tags, priority, status, sprint }`.
-- `toTicketNote(item)` — markdown for `RLand/Tickets/{code}/detail.md`.
-- `createVault().removeTicket(code)` — delete `RLand/Tickets/{code}/` when the ticket is complete.
+- `toTicketNote(item)` — markdown for `Proyect/Tickets/{code}/detail.md`.
+- `createVault().removeTicket(code)` — delete `Proyect/Tickets/{code}/` when the ticket is complete.
 
 Session helper: `apiGet(path)` / `apiPost(path, json)` on `https://surf.bluepeople.com` with the profile cookies. Never call `POST /api/login` from our code.
 

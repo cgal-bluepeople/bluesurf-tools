@@ -163,7 +163,7 @@ function sprintTable(rows, ticketsDir) {
   return lines;
 }
 
-export function toSprintNote(rows, { ticketsDir = "RLand/Tickets", review = false } = {}) {
+export function toSprintNote(rows, { ticketsDir = "Proyect/Tickets", review = false } = {}) {
   const sprint = rows[0]?.sprint || "Current sprint";
   const { pending, done } = groupSprintRows(rows);
   const heading = review ? `# ${sprint} Review` : `# ${sprint}`;

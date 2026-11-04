@@ -33,8 +33,8 @@ try {
     client,
     vault: createVault({
       root: vaultRoot,
-      ticketsDir: process.env.OBSIDIAN_TICKETS_DIR ?? "RLand/Tickets",
-      sprintsDir: process.env.OBSIDIAN_SPRINTS_DIR ?? "RLand/Sprints",
+      ticketsDir: process.env.OBSIDIAN_TICKETS_DIR ?? "Proyect/Tickets",
+      sprintsDir: process.env.OBSIDIAN_SPRINTS_DIR ?? "Proyect/Sprints",
     }),
     projectCode,
     sprintNumber,

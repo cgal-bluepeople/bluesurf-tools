@@ -9,8 +9,8 @@ export function safeFileName(name) {
 
 export function createVault({
   root,
-  ticketsDir = "RLand/Tickets",
-  sprintsDir = "RLand/Sprints",
+  ticketsDir = "Proyect/Tickets",
+  sprintsDir = "Proyect/Sprints",
 } = {}) {
   if (!root) {
     throw new Error("createVault requires a vault root");

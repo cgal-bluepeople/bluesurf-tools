@@ -10,7 +10,7 @@ This file is **for agents working in this repo**. Global Surf + Matt Pocock rout
 
 | Field | Value |
 | --- | --- |
-| App / package path | FILL: e.g. `apps/rland-web` or `.` |
+| App / package path | FILL: e.g. `apps/proyect-web` or `.` |
 | Dev & tests run from | FILL: same path or repo root |
 
 Single-package repos: set both to `.` and delete this section if you prefer.
@@ -28,6 +28,22 @@ Fill from `package.json` / README. Agents should prefer these over guessing.
 | Unit / integration tests | FILL: e.g. `pnpm test` |
 | Smoke (functional-test) | FILL: e.g. `pnpm test:smoke` or leave `—` |
 
+## Verify (CI and local gates)
+
+Agents should ship changes that **pass this repo’s automated checks** (GitHub Actions, GitLab CI, or equivalent). **functional-test** covers Surf acceptance in the browser; **Verify** is what keeps PRs green.
+
+Document the same commands CI runs, or the closest local equivalent:
+
+| Check | Local command | CI reference |
+| --- | --- | --- |
+| FILL: e.g. Lint + typecheck | FILL: e.g. `pnpm quality` | FILL: workflow/job name or `.github/workflows/…` |
+| FILL: e.g. Unit tests | FILL: e.g. `pnpm test` | FILL: |
+| FILL: optional | FILL: | FILL: |
+
+**Before** calling **implement** done (and again before **functional-test** if anything changed), run the **Verify** row commands from the app/package path in **Monorepo**. Fix failures; do not rely on CI to catch them first.
+
+If a check needs services (DB, stack), say how the human starts them or mark the command as “CI only — human runs locally.”
+
 ## Functional testing (agents)
 
 Used by the **functional-test** skill after **implement**. The human keeps the dev server running; agents do **not** start/stop it unless this section says otherwise. UI runner depends on harness: Cursor integrated browser, Claude in Chrome (`--chrome`), Codex browser MCP if configured, else **Playwright** subagent. Screenshots land in the ticket `validation/` folder in Obsidian.
@@ -41,7 +57,7 @@ Used by the **functional-test** skill after **implement**. The human keeps the d
 
 If browser login is required and no storageState exists yet, use the **wizard** skill once; document the path above after capture.
 
-For Surf tickets, validation artifacts go in the Obsidian vault (`RLand/Tickets/{code}/validation/`), not in this repo: `report.md`, `manual-reproduction.md` (human copy of the same steps the agent ran), and screenshots.
+For Surf tickets, validation artifacts go in the Obsidian vault (`Proyect/Tickets/{code}/validation/`), not in this repo: `report.md`, `manual-reproduction.md` (human copy of the same steps the agent ran), and screenshots.
 
 ## Environments & branches
 

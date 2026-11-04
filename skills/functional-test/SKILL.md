@@ -13,9 +13,10 @@ Settled before you start:
 
 1. **Spec** — pulled ticket `detail.md` plus the confirmed plan from the chat, including a **Functional checks** section.
 2. **Implement done** — **implement** finished for this ticket (including its commit). **code-review** had no blocking/high findings (nits may remain).
-3. **Dev server** — the human already runs the app. Read the implementation repo **AGENTS.md** (from `bluesurf-tools/templates/AGENTS.md.template` if missing, ask the human to add it). Use base URL, health endpoint, and auth from the **Functional testing** section. Fail fast if health check fails; tell the human to start dev per AGENTS.md.
-4. **Ticket key** — e.g. `PRY-XXX` (project code + number) for vault paths.
-5. **Validation folder** — know the write path: `RLand/Tickets/{code}/validation/` (create when saving artifacts).
+3. **Verify** — the implementation repo **AGENTS.md** **Verify (CI and local gates)** commands were run and passed (same bar as CI/actions). If that section is missing, ask the human to add it from `bluesurf-tools/templates/AGENTS.md.template`.
+4. **Dev server** — the human already runs the app. Read the implementation repo **AGENTS.md** (from `bluesurf-tools/templates/AGENTS.md.template` if missing, ask the human to add it). Use base URL, health endpoint, and auth from the **Functional testing** section. Fail fast if health check fails; tell the human to start dev per AGENTS.md.
+5. **Ticket key** — e.g. `PRY-XXX` (project code + number) for vault paths.
+6. **Validation folder** — know the write path: `Proyect/Tickets/{code}/validation/` (create when saving artifacts).
 
 ## Process
 
@@ -134,7 +135,7 @@ Return pass/fail, commands run, screenshot paths, and detail for **Manual reprod
 
 Under the BluePeople vault (`OBSIDIAN_VAULT`):
 
-`RLand/Tickets/{code}/validation/`
+`Proyect/Tickets/{code}/validation/`
 
 Write regardless of runner:
 
