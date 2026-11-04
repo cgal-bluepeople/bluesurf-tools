@@ -1,11 +1,19 @@
 ---
 name: functional-test
-description: Run functional acceptance checks after implementation — harness-aware browser (Cursor integrated browser, Claude in Chrome, Codex browser MCP) or Playwright fallback for UI; smoke matrix for CLI/API — write report, screenshots, and manual-reproduction steps under the Surf ticket validation folder. Use when bluesurf-ticket requires post-implement verification, when the user asks for functional or acceptance testing on a Surf ticket, or after implement and code-review on pulled ticket work.
+description: Mandatory next step after implement and code-review on a bluesurf-ticket — same agent turn, no waiting for a new user prompt. Run harness AskQuestion for UI runner choice, then smoke matrix and harness-aware browser (Cursor integrated browser, Claude in Chrome, Codex browser MCP) or Playwright fallback; write report, screenshots, and manual-reproduction under Proyect/Tickets/{code}/validation/. Also when the user asks for functional or acceptance testing on a Surf ticket.
 ---
 
 Blue Surf acceptance layer after Matt Pocock **implement** (which already ran **tdd**, **code-review**, and **commit**). Hard gate for **bluesurf-ticket** complete.
 
 Do not edit Matt Pocock skills; this skill only adds Surf verification.
+
+## Entry (same turn as implement)
+
+When **bluesurf-ticket** step 2 (**implement**) just finished:
+
+1. **Do not stop.** Ending the turn after code-review without starting this skill is incorrect.
+2. **Do not ask in chat** which functional-test runner to use — use the harness question tool in **step 3** below.
+3. Read this skill and continue through **step 10** (or failure loop) before you treat the ticket as ready for complete.
 
 ## Prerequisites
 
@@ -55,12 +63,17 @@ Before UI testing, determine **where this session runs** and **which agent-drive
 
 Record in `report.md`: harness, detection result, and tools checked.
 
-### 3. Choose UI runner (harness question)
+### 3. Choose UI runner (harness question — required)
 
-When **Functional checks** need a browser or interactive UI:
+When **Functional checks** need a browser or interactive UI (or the plan is UI-only and step 1 was skipped):
 
 - Build the **option list only from step 2** — never offer a dead path.
-- Use the harness question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code). In Codex, if only one UI path exists, state it and proceed; if two or more, ask in chat with the same option discipline.
+- **Always** call the harness question tool (`AskQuestion` in Cursor, `AskUserQuestion` in Claude Code) **before** any browser automation or Playwright subagent. **Never** list runner choices only in chat. **Never** end the turn without this call when UI checks apply.
+- If the harness question tool is unavailable, say so in one sentence, then ask in chat once — that is the only exception.
+- When only one runner is viable (e.g. Playwright only), still use the harness with that single option marked **Recommended**, plus **Other** for a custom answer.
+- In Codex with multiple options and no AskQuestion, use the same option labels in chat once, then proceed.
+
+**Completion criterion for this step:** the developer’s runner choice is recorded (harness answer received) before step 4–8.
 
 **Options to include (when available):**
 
@@ -75,8 +88,9 @@ When **Functional checks** need a browser or interactive UI:
 Rules:
 
 - On **Codex** or **Claude Code**, if agent-driven browser was **not** detected, **do not** show integrated browser or Claude in Chrome / MCP browser — offer **Playwright subagent** (and **Computer use** on Cursor only). Tell the human how to enable browser support (e.g. `claude --chrome` + extension, or add browser MCP to `~/.codex/config.toml`) if they expected a browser option.
-- If **only Playwright** is available, skip the question and run Playwright; say why in chat.
 - Record the chosen method in `report.md`.
+
+When **Functional checks** are CLI/API-only (no UI), skip this step and say in chat that smoke matrix (step 1) is the functional run.
 
 ### 4. Cursor integrated browser
 

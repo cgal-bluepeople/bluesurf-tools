@@ -49,9 +49,9 @@ Routing:
 
 Main flow after grilling: if a question needs a runnable answer, `prototype` (with `handoff`). If multi-session, `to-spec` then `to-tickets`, then `implement` each ticket in a fresh chat. If single-session, `implement` here. `implement` drives `tdd`, then `code-review`, then commit only if I asked. Never push unless I explicitly asked to push.
 
-Matt Pocock skills are immutable — do not edit them. On a pulled Surf ticket, `bluesurf-ticket` orchestrates after `implement`: `functional-test` (hard gate) before complete.
+Matt Pocock skills are immutable — do not edit them. On a pulled Surf ticket, `bluesurf-ticket` orchestrates after `implement`: in the **same turn**, chain `functional-test` (harness runner question, then run) before complete. Do not stop after code-review waiting for a new prompt.
 
-Keep grill → spec → tickets in one chat. Start a fresh chat per `implement` ticket.
+Keep grill → spec → tickets in one chat. For `bluesurf-ticket`: one chat per ticket through `functional-test`; do not open a new chat between `implement` and `functional-test`.
 
 Underneath: use `domain-modeling` when terminology, `CONTEXT.md`, or ADRs come up; use `codebase-design` when shaping a module, seam, or testable interface.
 
