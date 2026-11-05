@@ -37,6 +37,17 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 2. Sort by priority.
 3. Write `Proyect/Sprints/Sprint N.md` with title, estimated hours, type, tags, and ticket links.
 
+### `/bluesurf-daily-report`
+
+Agent skill only (no `npm run` yet). For `https://surf.bluepeople.com/dailyReport/YYYY-MM-DD`:
+
+- `GET /api/effort/myDailyReport/{date}` — existing activities and report status
+- `GET /api/google/calendar/{date}` — calendar events (empty days auto-add these in the UI)
+- `GET /api/WorkItems/efforts/{date}` — work items with effort context
+- `POST /api/Effort/DailyReport` — save with `status: 0` only; **never** `status: 2` (Save & Confirm)
+
+Target 8 hours across meetings plus ticket activities; optional prompt at end of a work session to capture time.
+
 ## Spike result (2026-09-10)
 
 Origin in production is **`https://surf.bluepeople.com`**, not `bluesurf.bluepeople.com`.

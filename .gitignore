@@ -1,4 +1,5 @@
 node_modules/
+.playwright/
 .chrome-profile/
 .scratch/
 .env

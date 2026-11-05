@@ -128,6 +128,22 @@ npm run mine -- --all   # include DONE
 npm run mine -- --json  # machine-readable, for agents
 ```
 
+## `/bluesurf-daily-report`
+
+Fill your Surf daily report for a day (save only — you still confirm in the UI).
+
+**Say:** `/bluesurf-daily-report`, “capture hours”, “daily report”, “report time for yesterday”, or “ayer”.
+
+**Does:**
+
+1. Reuses the saved session in headless Chromium.
+2. Reads the day (`GET /api/effort/myDailyReport/YYYY-MM-DD`), Google Calendar events, and work items with effort for that date.
+3. Keeps calendar activities already on the day; adds one activity per ticket worked (project, work item, category — development uses Desarrollo / Construcción / Codificación).
+4. Targets **8 hours** total (meetings plus ticket time). Never invents tickets or meetings.
+5. **`POST /api/Effort/DailyReport` with `status: 0` (Save)** — never Save & Confirm (`status: 2`).
+
+No CLI yet; the agent calls the Surf JSON APIs with your session cookies per the skill.
+
 ## Commands
 
 | Command | Purpose |

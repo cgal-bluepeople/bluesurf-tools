@@ -11,6 +11,7 @@ Routing:
 - /bluesurf-sprint, sprint note, or current sprint from Surf → bluesurf-sprint
 - /bluesurf-sprint-review, sprint review, review last sprint, or how did last sprint go → bluesurf-sprint-review
 - /bluesurf-mine, my tickets, or what's assigned to me in Surf → bluesurf-mine
+- /bluesurf-daily-report, capture or log hours, daily report, or report time on Surf → bluesurf-daily-report
 - New/fuzzy feature or idea in a repo → grill-with-docs
 - Idea with no working repo → grill-me
 - Too big or foggy for one session → wayfinder (decisions only; then to-spec)
