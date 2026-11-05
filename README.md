@@ -6,7 +6,7 @@ This workflow is **opinionated to me (Pato Piña / patopiña)**. After a ticket 
 
 Cursor, Codex, and Claude Code load the rules in [`rules/`](rules/) and the skills in [`skills/`](skills/). `npm run setup` links those skills into the harnesses you pick, including `~/.agents/skills`. Use them in a **new chat**. If the session is dead, run `npm run login` here first.
 
-**Implementation repos:** copy [`templates/AGENTS.md.template`](templates/AGENTS.md.template) to `AGENTS.md` in the project, fill placeholders (commands, functional testing, environment/branch table, git rules). Complements `setup-matt-pocock-skills` in that repo; does not replace it.
+**Implementation repos:** copy [`templates/AGENTS.md.template`](templates/AGENTS.md.template) to `AGENTS.md` in the project, fill placeholders (commands, functional testing, environment/branch table, git rules, **Ticket done**). Complements `setup-matt-pocock-skills` in that repo; does not replace it.
 
 Design notes: [docs/design.md](docs/design.md). Full install: [docs/setup.md](docs/setup.md).
 
@@ -42,12 +42,13 @@ Pull one Surf work item into Obsidian, then stop. A ticket tagged Bugs Detected 
 
 **Work ticket** (implementation repo; keep dev running and document URL/auth in **AGENTS.md**): grill (plan includes **Functional checks**) → Matt **implement** (TDD, code-review, commit with `(PRY-XXX)`) → **functional-test** (detects harness + available browser tools; smoke matrix when needed; `report.md`, screenshots, and `manual-reproduction.md` under `Proyect/Tickets/PRY-XXX/validation/`). Sequencing is in **bluesurf-ticket**; Matt Pocock skills stay unchanged.
 
-**Complete the ticket** only after functional-test passes:
+**Complete the ticket** only after functional-test passes **and** every gate in that repo’s **AGENTS.md** **Ticket done** section is true. Commit and push is push permission. It deletes the vault folder only when **Ticket done** lists that push as a gate.
 
-| You say | What happens |
+| What happened | What the agent does |
 | --- | --- |
-| “The ticket is complete” | Deletes `Proyect/Tickets/PRY-XXX/` from the vault (including `validation/`). |
-| “Commit and push” | Commits if needed, pushes the **implementation repo**, then deletes the vault folder. That phrase is push permission for this ticket. |
+| **Ticket done** gates are all true | Deletes `Proyect/Tickets/PRY-XXX/` from the vault (including `validation/`). |
+| “Commit and push” | Commits if needed and pushes the **implementation repo**. Then re-reads **Ticket done**. |
+| **Ticket done** missing or still `FILL` | Stops and asks you to fill it from the template. The vault folder stays. |
 
 Same as the CLIs:
 
@@ -149,7 +150,7 @@ npm run mine -- --json  # machine-readable, for agents
 - `BLUESURF_HEADED=1` shows the browser window, for debugging
 - Do not put passwords in this repo
 - Never `POST /api/login` from our code
-- Never push unless you explicitly ask (or say **commit and push** on a pulled ticket)
+- Never push unless you explicitly ask (or say **commit and push** on a pulled ticket). That phrase is push permission. Ticket-done follows **Ticket done** in the implementation repo’s **AGENTS.md**.
 - Prefer the **skills** for move and ticket completion: `bluesurf-move` previews and asks before changing the board; raw `npm run move … --yes` skips that guardrail
 
 ### For colleagues

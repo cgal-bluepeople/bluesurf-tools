@@ -8,8 +8,8 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 | --- | --- |
 | Data access | Persistent Chrome profile + replay the SPA’s private JSON APIs. DOM scrape is fallback only. |
 | After `/bluesurf-ticket` | Write Obsidian note + attachments, then **stop**. If the note is tagged Bugs Detected, the comments are the regressions to fix. Otherwise ask grill vs implement. |
-| Ticket implement flow | grill (plan includes **Functional checks**) → Matt **implement** (tdd, code-review, commit with `(PRY-XXX)`) → **functional-test** (hard gate; `Proyect/Tickets/PRY-XXX/validation/`) → complete / push. Orchestration in **bluesurf-ticket**; do not edit Matt Pocock skills. |
-| After the ticket is complete | Delete `Proyect/Tickets/PRY-XXX/` entirely (including `validation/`). "The ticket is complete" or "commit and push" both complete it; complete only after functional-test passed. Commit and push also pushes the implementation repo. |
+| Ticket implement flow | grill (plan includes **Functional checks**) → Matt **implement** (tdd, code-review, commit with `(PRY-XXX)`) → **functional-test** (hard gate; `Proyect/Tickets/PRY-XXX/validation/`) → complete when that repo’s **AGENTS.md** **Ticket done** gates are all true. Orchestration in **bluesurf-ticket**; do not edit Matt Pocock skills. |
+| After the ticket is done | Delete `Proyect/Tickets/PRY-XXX/` entirely (including `validation/`). **Ticket done** in the implementation repo **AGENTS.md** is the gate list. Functional-test must already have passed. Commit and push is git; it runs ticket-done only when that section lists it. |
 | Client home | This repo: `~/Projects/bluesurf-tools` |
 | Skills | `npm run setup` symlinks the Blue Surf skills into `~/.agents/skills` and into each selected harness (`~/.cursor/skills`, `~/.codex/skills`, `~/.claude/skills`) |
 | Obsidian | Vault `BluePeople` → `Proyect/Tickets/RLD-100/detail.md`, files in `Proyect/Tickets/RLD-100/attachments/`, sprint notes in `Proyect/Sprints/Sprint N.md` |
@@ -29,7 +29,7 @@ Local client and agent skills for **your** Blue Surf session. No public API. No 
 2. Write `Proyect/Tickets/RLD-100/detail.md` in the BluePeople vault.
 3. Download attachments into `Proyect/Tickets/RLD-100/attachments/`.
 4. Stop. If the note is tagged Bugs Detected, the `## Comments` section is the regression work: follow diagnosing-bugs, then implement. Otherwise ask grill vs implement via the harness.
-5. When you say the ticket is complete, or say to commit and push, delete `Proyect/Tickets/RLD-100/` entirely. Commit and push also commits the implementation repo with `(RLD-100)` on the subject and pushes.
+5. When every gate in the implementation repo **AGENTS.md** **Ticket done** section is true (and functional-test has passed), delete `Proyect/Tickets/RLD-100/` entirely. Commit and push commits the implementation repo with `(RLD-100)` on the subject and pushes; it deletes the folder only when **Ticket done** lists that push.
 
 ### `/bluesurf-sprint`
 

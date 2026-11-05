@@ -178,4 +178,4 @@ Stop after **3** full implement → functional cycles. Then stop and ask the hum
 
 - Replacing unit/integration tests (**tdd** still owns those).
 - Git commit (**implement** owns commit unless follow-up fixes need a new commit before push).
-- Pushing or running **ticket-done** (human says ticket complete / commit and push for that).
+- Pushing, and running **ticket-done**. **Ticket done** in the implementation repo **AGENTS.md** is the gate list for ticket-done.

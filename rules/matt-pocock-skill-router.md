@@ -7,7 +7,7 @@ Classify every coding request and follow the matching skill without waiting for 
 Routing:
 
 - /bluesurf-ticket, pull a Surf ticket, or PRY-XXX into Obsidian → bluesurf-ticket
-- "ticket is complete" or "commit and push" on a pulled Surf ticket → bluesurf-ticket (complete branch)
+- Mark a pulled Surf ticket done → bluesurf-ticket (complete branch). The implementation repo AGENTS.md **Ticket done** section is the gate list; commit and push is ordinary git unless that section lists it.
 - /bluesurf-sprint, sprint note, or current sprint from Surf → bluesurf-sprint
 - /bluesurf-sprint-review, sprint review, review last sprint, or how did last sprint go → bluesurf-sprint-review
 - /bluesurf-mine, my tickets, or what's assigned to me in Surf → bluesurf-mine

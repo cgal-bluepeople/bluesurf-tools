@@ -1,6 +1,6 @@
 ---
 name: bluesurf-ticket
-description: Pulls one Blue Surf (Surf) work item such as PRY-XXX into the Obsidian vault (detail note plus attachments), then stops and asks grill vs implement. Use when the user wants a specific ticket brought down or worked on, in any wording: "surf PRY-XXX", "pull PRY-XXX", "grab ticket from Surf", "let's work on PRY-XXX", or /bluesurf-ticket. When the pulled note is tagged Bugs Detected, the comments are regressions to fix: follow diagnosing-bugs and implement, and do not recommend grill. Orchestrates Surf-only steps after Matt Pocock implement — same conversation, same turn handoff to functional-test (harness runner question) before complete. The complete branch ("the ticket is complete", "commit and push") applies only to a ticket pulled with this skill earlier in the same conversation; otherwise "commit and push" is ordinary git work, not this skill.
+description: Pulls one Blue Surf (Surf) work item such as PRY-XXX into the Obsidian vault (detail note plus attachments), then stops and asks grill vs implement. Use when the user wants a specific ticket brought down or worked on, in any wording: "surf PRY-XXX", "pull PRY-XXX", "grab ticket from Surf", "let's work on PRY-XXX", or /bluesurf-ticket. When the pulled note is tagged Bugs Detected, the comments are regressions to fix: follow diagnosing-bugs and implement, and do not recommend grill. Orchestrates Surf-only steps after Matt Pocock implement — same conversation, same turn handoff to functional-test (harness runner question) before complete. The complete branch marks a pulled ticket done only when that implementation repo's AGENTS.md Ticket done gates are all true. Commit and push is ordinary git unless that section lists it as a gate.
 ---
 
 Repo: `~/Projects/bluesurf-tools`. Session is `.surf-cookies.json` there, loaded into headless Chromium.
@@ -27,18 +27,21 @@ When implementing a pulled ticket in the **implementation repo** (keep dev runni
 1. **Plan** — confirmed plan (from grill or regression scope) must include a **Functional checks** section (concrete pass/fail bullets for **functional-test**).
 2. **implement** — run the **implement** skill to completion (it drives **tdd**, **code-review**, and **commit**). For this Surf ticket, the commit subject ends with `({code})`, e.g. `(PRY-123)`.
 3. **functional-test** — **same conversation, do not wait for a new user message.** As soon as step 2 finishes with code-review clear of blockers, read and follow **functional-test** immediately. Do not end your turn with only an implement/code-review summary. The developer chooses the UI runner via the **harness question tool** inside **functional-test** (not a plain-chat “which do you prefer?”). Hard gate; artifacts in `Proyect/Tickets/{code}/validation/` (`report.md`, `manual-reproduction.md`, screenshots). On fail, follow **functional-test** failure loop (max 3 cycles), then repeat from step 2 as needed.
-4. **Complete** — only after step 3 passes: human says ticket complete or commit and push (see below).
+4. **Complete** — after step 3 passes, follow **Complete**. Run ticket-done only when **AGENTS.md** **Ticket done** says every gate is true.
 
-Do not run **bluesurf-ticket** complete or delete the vault folder until **functional-test** has passed.
+Do not delete the vault folder until **functional-test** has passed and every **Ticket done** gate is true.
 
 **One chat for this ticket:** pull → grill → implement → functional-test → complete. Do not start a new chat after code-review; the harness runner question is part of this session.
 
 ## Complete
 
-When the user says the ticket is complete, or says to commit and push:
+Ticket-done deletes the vault folder. It runs only for a ticket pulled with this skill earlier in this conversation, and only when the implementation repo **AGENTS.md** **Ticket done** section says every gate is already true. Commit and push follow **Agent git rules** in that file. They mark the ticket done only when **Ticket done** lists them as a gate.
+
+When functional-test has just passed, the human asks to mark the ticket done, or the human says to commit and push:
 
 1. Take the ticket key (the one just pulled, or the one they name).
-2. If **functional-test** has not passed for this ticket, run **functional-test** first; do not complete until it passes.
-3. If they said commit and push: push the implementation repo branch (**implement** should already have committed). That phrase is push permission for this ticket. If there are uncommitted fixes after functional-test, commit with `({code})` on the subject, then push.
-4. From bluesurf-tools: `npm run ticket-done -- PRY-XXX`.
-5. Done when `Proyect/Tickets/PRY-XXX/` is gone (including `validation/`). If they asked to push, the branch is also on the remote.
+2. If they said commit and push: commit any uncommitted fixes with `({code})` on the subject, then push the implementation repo branch. That phrase is push permission for this ticket. It does not by itself run ticket-done.
+3. If **functional-test** has not passed, run it before ticket-done. A push they already asked for in step 2 stays a push.
+4. Read **Ticket done** in the implementation repo **AGENTS.md**. If the file, the section, or any cell is still `FILL`, stop and ask the human to fill it from `bluesurf-tools/templates/AGENTS.md.template`. Leave the vault folder in place.
+5. When functional-test has passed and every gate in that section is true, from bluesurf-tools: `npm run ticket-done -- PRY-XXX`.
+6. Done when `Proyect/Tickets/PRY-XXX/` is gone (including `validation/`). If a gate is still false, name that gate and leave the vault folder in place.

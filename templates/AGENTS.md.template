@@ -86,7 +86,7 @@ Defaults (override in the table or here if this repo differs):
 
 - Work on **feature branches**; do not commit directly to protected branches unless the human explicitly asks.
 - **Never push or merge** to testing, UAT, or production branches (or any row marked no above).
-- **Push** only when the human explicitly asks (Surf “commit and push” on a ticket counts for that ticket).
+- **Push** only when the human explicitly asks. On a Surf ticket, “commit and push” is that permission. **Ticket done** says whether that push is also a done gate.
 - **Pull requests:** target branch FILL: e.g. `dev`. Open or update a PR only when asked; branch must exist on remote first unless the human asked to push.
 
 ## Surf tickets (Blue Surf)
@@ -94,8 +94,40 @@ Defaults (override in the table or here if this repo differs):
 When working a ticket pulled with **bluesurf-ticket**:
 
 - Commit subject ends with the ticket key in parentheses: FILL: e.g. `(PRY-123)`.
-- Run **functional-test** after **implement** before ticket complete.
-- Do not run **ticket-done** or delete the vault folder until functional-test passed.
+- Run **functional-test** after **implement**, in the same conversation.
+- Mark the ticket done only under **Ticket done**.
+
+## Ticket done
+
+This section is the only definition of when an agent may run `npm run ticket-done` (delete the Obsidian ticket folder for this work item). **bluesurf-ticket** reads it after functional-test passes, when the human asks to mark the ticket done, and after a commit-and-push on that ticket.
+
+Functional-test must already have passed. That gate lives in **bluesurf-ticket**; leave it out of the table.
+
+Commit, push, and merge follow **Agent git rules**. They count toward ticket-done only when a row below says so.
+
+Replace every `FILL`. A cell still marked `FILL` means the agent stops and asks you to fill this section. It does not run ticket-done.
+
+| Gate | True when |
+| --- | --- |
+| FILL: name the condition, e.g. PR merged to `dev` | FILL: how the agent checks it, e.g. `gh pr view` shows MERGED into `dev` |
+| FILL: e.g. Human says “mark the ticket done” | FILL: the exact phrase, or `—` when this repo has no phrase gate |
+
+<!--
+  Examples (delete after you fill the table). These are not defaults.
+
+  Ticket-done after merge, not on push:
+
+  | Gate | True when |
+  | --- | --- |
+  | PR merged to `dev` | `gh pr view` for this branch shows MERGED and base `dev` |
+  | Human says “mark the ticket done” | They used that phrase in this chat |
+
+  Ticket-done on the human’s phrase only (push stays git):
+
+  | Gate | True when |
+  | --- | --- |
+  | Human says “mark the ticket done” | They used that phrase in this chat |
+-->
 
 ## Secrets & credentials
 
